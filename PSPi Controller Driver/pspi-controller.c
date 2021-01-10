@@ -76,11 +76,14 @@ int main(int argc, char *argv[]) {
   printf("PSPi Controller Starting\n");
   I2CJoystickStatus newStatus;
    if(readI2CJoystick(I2CFile, &newStatus) != 0) {
+	  int system(const char *command);
       printf("Controller is not detected on the I2C bus.\n");
+	  printf("Attempting to write ATmega328P fuses using SPI\n");
+	  system("sudo avrdude -p m328p -c gpio -U lfuse:w:0xE2:m -U hfuse:w:0xDA:m -U efuse:w:0x05:m");
+	  sleep(1);
       printf("Attempting to flash ATmega328P firmware using SPI\n");
-      int system(const char *command);
       system("sudo avrdude -p m328p -c gpio -e -U flash:w:pspi.hex");
-	sleep(1);
+	  sleep(1);
     }
 
 
