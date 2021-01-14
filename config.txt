@@ -1,0 +1,51 @@
+# For more options and information see
+# http://rpf.io/configtxt
+# Some settings may impact device functionality. See link above for details
+
+# uncomment to force a console size. By default it will be display's size minus
+# overscan.
+#framebuffer_width=800
+#framebuffer_height=480
+
+#uncomment to overclock the arm. 700 MHz is the default.
+#arm_freq=800
+
+# Uncomment some or all of these to enable the optional hardware interfaces
+#dtparam=i2c_arm=on
+#dtparam=i2c0=on
+#dtparam=i2c1=on
+
+#Disable eeprom read at bootup
+force_eeprom_read=0
+
+#Enables I2C-0
+dtparam=i2c_vc=on
+
+#Enables I2C-0 and sets baudrate
+#dtparam=i2c_vc=on,i2c_vc_baudrate=100000
+
+dtparam=i2s=off
+dtparam=spi=off
+
+#Shifts I2C-0 to CSI pins
+dtoverlay=i2c0-bcm2708,pins_44_45
+
+# Enable audio (loads snd_bcm2835)
+dtparam=audio=on
+
+[pi4]
+# Enable DRM VC4 V3D driver on top of the dispmanx display stack
+dtoverlay=vc4-fkms-v3d
+max_framebuffers=2
+
+[all]
+#dtoverlay=vc4-fkms-v3d
+overscan_scale=1
+
+#enable USB
+dtoverlay=dwc2,dr_mode=host
+
+#loads driver for HDMI I2C
+#takes a large % of CPU, not usable
+#https://github.com/raspberrypi/linux/issues/3152
+#dtoverlay=vc4-kms-v3d
