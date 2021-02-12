@@ -76,7 +76,7 @@ int main(int argc, char *argv[]) {
   printf("PSPi Controller Starting\n");
   I2CJoystickStatus newStatus;
    if(readI2CJoystick(I2CFile, &newStatus) != 0) {
-	  int system(const char *command);
+	  
       printf("Controller is not detected on the I2C bus.\n");
 	  sleep(1);
     }
