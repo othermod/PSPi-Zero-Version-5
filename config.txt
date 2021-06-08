@@ -1,60 +1,67 @@
-# For more options and information see
-# http://rpf.io/configtxt
-# Some settings may impact device functionality. See link above for details
+#dtoverlay=pi3-disable-bt
+#dtoverlay=pi3-disable-wifi
 
-# uncomment to force a console size. By default it will be display's size minus
-# overscan.
-framebuffer_width=800
-framebuffer_height=480
-
-#uncomment to overclock the arm. 700 MHz is the default.
-#arm_freq=800
-
-#Disable eeprom read at bootup
-force_eeprom_read=0
-
-#Set up I2C-1 on CSI pins 44 and 45
-#was using I2C-0, but muxing was causing issues and the i2c0 overlay isn't functioning
-dtoverlay=i2c1,pins_44_45
+#disable_splash=1
 
 # Enable audio (loads snd_bcm2835)
 dtparam=audio=on
+disable_audio_dither=1
+	#test this and see whether there is any change
+audio_pwm_mode=2
 
+[pi4]
 # Enable DRM VC4 V3D driver on top of the dispmanx display stack
 dtoverlay=vc4-fkms-v3d
 max_framebuffers=2
 
-#enable USB
-dtoverlay=dwc2,dr_mode=host
+[all]
+#dtoverlay=vc4-fkms-v3d
+gpu_mem_256=128
+gpu_mem_512=256
+gpu_mem_1024=256
+overscan_scale=1
 
-#does this do anything?
-#DISABLE_HDMI=1
+#Set GPIO pins to 18-Bit DPI Mode 6
+#GPIO 0 and 1 needed for DPI Clock and Data Enable
+gpio=0=a2,np
+gpio=1=a2,np
+#Set GPIO pins 2 and 3 to I2C Mode. These can be used for other things, if needed.
+gpio=2=a0,np
+gpio=3=a0,np
+#Set up color pins
+gpio=4=a2,np
+gpio=5=a2,np
+gpio=6=a2,np
+gpio=7=a2,np
+gpio=8=a2,np
+gpio=9=a2,np
+#GPIO 10 is available for use
+dtoverlay=gpio-shutdown,gpio_pin=10
+#GPIO 11 is available for use
+gpio=12=a2,np
+gpio=13=a2,np
+gpio=14=a2,np
+gpio=15=a2,np
+gpio=16=a2,np
+gpio=17=a2,np
+dtoverlay=pwm-2chan,pin=18,func=2,pin2=19,func2=2
+gpio=20=a2,np
+gpio=21=a2,np
+gpio=22=a2,np
+gpio=23=a2,np
+gpio=24=a2,np
+gpio=25=a2,np
+gpio=26=ip,pu
+dtoverlay=gpio-poweroff,active_low="y"
+dtparam=act_led_gpio=27
+dtparam=act_led_activelow=yes
 
-#temporary while using v4 board to test
-gpio=27=op,dh
-
-#configure DPI
-dtoverlay=lcd
-overscan_left=0
-overscan_right=0
-overscan_top=0
-overscan_bottom=0
+#Configure DPI signal
+framebuffer_width=800
+framebuffer_height=480
 enable_dpi_lcd=1
 display_default_lcd=1
 dpi_group=2
 dpi_mode=87
-dpi_output_format=458774
+dpi_output_format=503846
 dpi_timings=800 0 40 48 88 480 0 13 3 32 0 0 0 60 0 32000000 6
-
-#PWM mono audio from GPIO 18
-dtoverlay=audremap,pins_18_19
-
-#Does not work on CM4
-#dtoverlay=pwm,pin=18,func=2
-
-#Reduce PWM Audio Noise
-#verify it still works with CM4 and Buster
-disable_audio_dither=1
-
-#Research this
-#audio_pwm_mode=2
