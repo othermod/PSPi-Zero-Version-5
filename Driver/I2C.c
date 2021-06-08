@@ -4,7 +4,7 @@ int openI2C(int deviceIdx) {
   int file;
   char filename[2048];
 //specify which I2C bus to use
-  sprintf(filename, "/dev/i2c-0");
+  sprintf(filename, "/dev/i2c-1");
 
   if ((file = open(filename, O_RDWR)) < 0) {
     /* ERROR HANDLING: you can check errno to see what went wrong */

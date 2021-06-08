@@ -19,18 +19,18 @@ int createUInputDevice() {
   ret |= ioctl(fd, UI_SET_EVBIT, EV_REL);
 
   // button
-  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_DPAD_UP);
-  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_DPAD_DOWN);
-  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_DPAD_LEFT);
-  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_DPAD_RIGHT);
-  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_START);
-  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_SELECT);
   ret |= ioctl(fd, UI_SET_KEYBIT, BTN_A);
   ret |= ioctl(fd, UI_SET_KEYBIT, BTN_B);
   ret |= ioctl(fd, UI_SET_KEYBIT, BTN_X);
   ret |= ioctl(fd, UI_SET_KEYBIT, BTN_Y);
   ret |= ioctl(fd, UI_SET_KEYBIT, BTN_TL);
   ret |= ioctl(fd, UI_SET_KEYBIT, BTN_TR);
+  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_START);
+  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_SELECT);
+  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_DPAD_UP);
+  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_DPAD_DOWN);
+  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_DPAD_LEFT);
+  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_DPAD_RIGHT);
   ret |= ioctl(fd, UI_SET_KEYBIT, BTN_1);
   ret |= ioctl(fd, UI_SET_KEYBIT, BTN_2);
   ret |= ioctl(fd, UI_SET_KEYBIT, BTN_3);
@@ -40,12 +40,12 @@ int createUInputDevice() {
   // axis
   ret |= ioctl(fd, UI_SET_EVBIT, EV_ABS);
   ret |= ioctl(fd, UI_SET_ABSBIT, ABS_X);
-  uidev.absmin[ABS_X] = 0;
-  uidev.absmax[ABS_X] = 255;
+  uidev.absmin[ABS_X] = 55;
+  uidev.absmax[ABS_X] = 200;
   
   ret |= ioctl(fd, UI_SET_ABSBIT, ABS_Y);
-  uidev.absmin[ABS_Y] = 0;
-  uidev.absmax[ABS_Y] = 255;
+  uidev.absmin[ABS_Y] = 55;
+  uidev.absmax[ABS_Y] = 200;
 
   
   if(ret) {
