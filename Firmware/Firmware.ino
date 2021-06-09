@@ -1,5 +1,6 @@
 #include <Wire.h>
 #include <avr/sleep.h>
+#include "pins_arduino.h"
 
 // ------------------------------------------
 // Configuration
@@ -18,10 +19,13 @@
 #define MUTE_PIN 13
 const int BTN_DIS = 9;
 const int BTN_MUTE = 11;
-int PWMarray[] = {55,63,71,79,87,95,103,111,255};
+int PWMarray[] = {55,62,69,75,80,90,100,255};
 int PWMposition = 1;
 int BTN_DIS_STATUS = 0;
 int BTN_MUTE_STATUS = 0;
+const int rolling = 64;
+uint16_t AVGvolt = 119 * rolling;
+uint16_t AVGamp = 119 * rolling;
 
 //PWM
 #define PWM_PIN 5
@@ -93,8 +97,8 @@ struct I2CJoystickStatus {
   uint16_t buttons; // button status
   uint8_t axis0; // first axis
   uint8_t axis1; // second axis
-  uint8_t voltage; //
-  uint8_t amperage; //
+  uint16_t voltage; //
+  uint16_t amperage; //
 };
 
 I2CJoystickStatus joystickStatus;
@@ -164,21 +168,19 @@ void scanInput() {
 }
 
 void scanAnalog() {
-  // read analog stick values, bitshift to uint8_t because it doesnt need more accuracy
-  uint8_t x = analogRead(ANALOG_PIN_X) / 4;
-  uint8_t y = analogRead(ANALOG_PIN_Y) / 4;
-
-
-   //temporary troubleshooting 
-//  x = 127;
-//  y = 127;
+  // read analog stick values, change to 8 bit because it doesnt need more accuracy
   // store them in the I2C data
-  joystickStatus.axis0 = x;
-  joystickStatus.axis1 = y;
+  joystickStatus.axis0 = analogRead(ANALOG_PIN_X) / 4;
+  joystickStatus.axis1 = analogRead(ANALOG_PIN_Y) / 4;
   // read raw power status. calculations might eventually be done on atmega and sent to Pi
-  // this is sent over 8 bits because the maximum value is 116
-  joystickStatus.voltage = analogRead(VOLTAGE_PIN);
-  joystickStatus.amperage = analogRead(AMPERAGE_PIN);
+  // this is sent over 8 bits because the maximum value is below 255
+  AVGvolt = AVGvolt - (AVGvolt / rolling) + analogRead(VOLTAGE_PIN);
+  joystickStatus.voltage = AVGvolt;
+  AVGamp = AVGamp - (AVGamp / rolling) + analogRead(AMPERAGE_PIN);
+  joystickStatus.amperage = AVGamp;
+// outdated 
+//  if (joystickStatus.voltage < 94) {digitalWrite(LOWBATT_PIN, 1);}
+//  if (joystickStatus.voltage > 99) {digitalWrite(LOWBATT_PIN, 0);}
 }
 
 void loop() {
@@ -189,7 +191,7 @@ void loop() {
     if(digitalRead(BTN_DIS) == 0 and BTN_DIS_STATUS == 0){         // If button is pressed
     BTN_DIS_STATUS = 1;
     PWMposition++;
-    if(PWMposition > 8) {PWMposition = 0;}
+    if(PWMposition > 7) {PWMposition = 0;}
     analogWrite(PWM_PIN, PWMarray[PWMposition]);
     }
     if(digitalRead(BTN_DIS) == 1 and BTN_DIS_STATUS == 1){         // If button is not pressed
