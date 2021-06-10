@@ -44,7 +44,7 @@ uint16_t AVGamp = 119 * rolling;
 #define BTN_L           0x0A
 #define BTN_R           0x0B
 #define BTN_H           0x0C
-//#define BTN_DIS          0x0D
+//#define BTN_DIS         0x0D
 //#define BTN_14          0x0E
 //#define BTN_15          0x0F
 
@@ -55,22 +55,22 @@ struct InputSwitch {
   unsigned char code;
 };
 
-// the (up to 16) switches (arduino pin #, state, time, code)
+// the (up to 16) buttons (arduino pin #, state, time, code)
 InputSwitch switches[] = {
-  {4, HIGH, 0, BTN_A},    // A
-  {6, HIGH, 0, BTN_B},    // B
-  {20, HIGH, 0, BTN_X},   // X
-  {21, HIGH, 0, BTN_Y},   // Y
-  {14, HIGH, 0, BTN_LT},  // LTRIGGER
-  {3, HIGH, 0, BTN_RT},   // RTRIGGER
-  {8, HIGH, 0, BTN_SL},   // SELECT
-  {7, HIGH, 0, BTN_ST},   // START
-  {0, HIGH, 0, BTN_U},    // UP
-  {1, HIGH, 0, BTN_D},    // DOWN
-  {15, HIGH, 0, BTN_L},   // LEFT
-  {2, HIGH, 0, BTN_R},    // RIGHT
-  {10, HIGH, 0, BTN_H},   // HOME
-//  {9, HIGH, 0, BTN_DIS},    // DISPLAY
+  {4,  HIGH, 0, BTN_A},    // A
+  {6,  HIGH, 0, BTN_B},    // B
+  {20, HIGH, 0, BTN_X},    // X
+  {21, HIGH, 0, BTN_Y},    // Y
+  {14, HIGH, 0, BTN_LT},   // LTRIGGER
+  {3,  HIGH, 0, BTN_RT},   // RTRIGGER
+  {8,  HIGH, 0, BTN_SL},   // SELECT
+  {7,  HIGH, 0, BTN_ST},   // START
+  {0,  HIGH, 0, BTN_U},    // UP
+  {1,  HIGH, 0, BTN_D},    // DOWN
+  {15, HIGH, 0, BTN_L},    // LEFT
+  {2,  HIGH, 0, BTN_R},    // RIGHT
+  {10, HIGH, 0, BTN_H},    // HOME
+//{9,  HIGH, 0, BTN_DIS},   // DISPLAY
 };
 
 

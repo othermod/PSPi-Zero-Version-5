@@ -25,16 +25,16 @@ int createUInputDevice() {
   ret |= ioctl(fd, UI_SET_KEYBIT, BTN_Y);
   ret |= ioctl(fd, UI_SET_KEYBIT, BTN_TL);
   ret |= ioctl(fd, UI_SET_KEYBIT, BTN_TR);
-  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_START);
   ret |= ioctl(fd, UI_SET_KEYBIT, BTN_SELECT);
+  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_START);
   ret |= ioctl(fd, UI_SET_KEYBIT, BTN_DPAD_UP);
   ret |= ioctl(fd, UI_SET_KEYBIT, BTN_DPAD_DOWN);
   ret |= ioctl(fd, UI_SET_KEYBIT, BTN_DPAD_LEFT);
   ret |= ioctl(fd, UI_SET_KEYBIT, BTN_DPAD_RIGHT);
   ret |= ioctl(fd, UI_SET_KEYBIT, BTN_1);
-  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_2);
-  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_3);
-  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_4);
+//  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_2);
+//  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_3);
+//  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_4);
 
 
   // axis

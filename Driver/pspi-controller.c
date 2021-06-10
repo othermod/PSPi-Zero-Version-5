@@ -28,29 +28,29 @@ int readI2CJoystick(int file, I2CJoystickStatus *status) {
 
 void updateUInputDevice(int UInputFIle, I2CJoystickStatus *newStatus, I2CJoystickStatus *status) {
   // update button event
-  TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x00, BTN_DPAD_UP);
-  TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x01, BTN_DPAD_DOWN);
-  TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x02, BTN_DPAD_RIGHT);
-  TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x03, BTN_TR);
-  TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x04, BTN_A);
-  TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x05, BTN_B);
-  TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x06, BTN_START);
-  TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x07, BTN_SELECT);
-  TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x08, BTN_1);
-  TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x09, BTN_2);
-  TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x0A, BTN_TL);
-  TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x0B, BTN_DPAD_LEFT);
-  TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x0C, BTN_X);
-  TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x0D, BTN_Y);
-  TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x0E, BTN_3);
-  TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x0F, BTN_4);
+  TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x00, BTN_A);
+  TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x01, BTN_B);
+  TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x02, BTN_X);
+  TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x03, BTN_Y);
+  TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x04, BTN_TL);
+  TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x05, BTN_TR);
+  TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x06, BTN_SELECT);
+  TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x07, BTN_START);
+  TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x08, BTN_DPAD_UP);
+  TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x09, BTN_DPAD_DOWN);
+  TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x0A, BTN_DPAD_LEFT);
+  TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x0B, BTN_DPAD_RIGHT);
+  TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x0C, BTN_1);
+//  TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x0D, BTN_2);
+//  TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x0E, BTN_3);
+//  TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x0F, BTN_4);
   // joystick axis
   uint8_t val = newStatus->axis0;
   if (val > 107 & val < 147) {val = 127;}
-  if(val != status->axis0) {sendInputEvent(UInputFIle, EV_ABS, ABS_X, val);}
+  if (val != status->axis0) {sendInputEvent(UInputFIle, EV_ABS, ABS_X, val);}
   val = newStatus->axis1;
   if (val > 107 & val < 147) {val = 127;}
-  if(val != status->axis1) {sendInputEvent(UInputFIle, EV_ABS, ABS_Y, val);}
+  if (val != status->axis1) {sendInputEvent(UInputFIle, EV_ABS, ABS_Y, val);}
 }
 
 int main(int argc, char *argv[]) {
@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
 int IndicationVoltage = 4200;
 int IsCharging = 0;
 int PreviousIsCharging = 0;
-const int MagicNumber = 30;
+const int MagicNumber = 17;
 int ChargeStatus = 0;
 int PreviousChargeStatus = 0;
 //AVGvolt and AVGamp are the ADC readings averaged over the most recent 64 readings
