@@ -1,2 +1,2 @@
-# PSPi 1000 Version 5
+# PSPi Zero Version 5
  
