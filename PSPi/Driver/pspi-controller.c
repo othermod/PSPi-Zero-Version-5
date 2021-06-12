@@ -1,3 +1,5 @@
+
+
 // http://elinux.org/Interfacing_with_I2C_Devices
 #include <stdio.h>
 #include <stdlib.h>
@@ -76,17 +78,23 @@ int main(int argc, char *argv[]) {
     }
 
 //edit names so its more clear what is what
-int IndicationVoltage = 4200;
+
+sleep(1);
+
 int IsCharging = 0;
 int PreviousIsCharging = 0;
 const int MagicNumber = 17;
 int ChargeStatus = 0;
 int PreviousChargeStatus = 0;
+
 //AVGvolt and AVGamp are the ADC readings averaged over the most recent 64 readings
 uint16_t AVGvolt = status.voltage;
 uint16_t AVGamp = status.amperage;
+
 //rolling is the number is number of readings being averaged together
 const int rolling = 64;
+
+int IndicationVoltage = 0;
 
 FILE * fp;
 fp = fopen ("log.csv","w");
@@ -95,8 +103,10 @@ fclose(fp);
 
 int line = 0;
 int count = 0;
-system("/home/pi/driver/./pngview -n -b 0 -l 100000 -x 765 -y 5 /home/pi/driver/battery10.png &");
+system("/boot/PSPi/Driver/./pngview -n -b 0 -l 100000 -x 765 -y 5 /boot/PSPi/Driver/PNG/battery10.png &");
   while(1) {
+//	printf("%d\n", status.voltage);
+//	printf("%d\n", status.amperage);
     // read new status from I2C
     I2CJoystickStatus newStatus;
     if(readI2CJoystick(I2CFile, &newStatus) != 0) {
@@ -107,20 +117,21 @@ system("/home/pi/driver/./pngview -n -b 0 -l 100000 -x 765 -y 5 /home/pi/driver/
       updateUInputDevice(UInputFIle, &newStatus, &status);
       status = newStatus;
     }
-	
+
 	AVGvolt = status.voltage;
 	AVGamp = status.amperage;
-	//printf("%d\n", status.axis0);
+//	printf("%d\n", IndicationVoltage);
 	//printf("%d\n", status.axis1);
 	//printf("%d\n", status.amperage);
 	int RollingVoltage = AVGvolt * 11 * 3300 / 1024 / rolling;
 	int AmperageDifference = (AVGvolt - AVGamp) * 10 / 11;
 	int CalculatedVoltage = RollingVoltage + AmperageDifference * 10 / MagicNumber;
 	PreviousIsCharging = IsCharging;
+	if (IndicationVoltage == 0) {IndicationVoltage = CalculatedVoltage;}
 	if (IsCharging == 0) {
 	//printf("\nDischarging");
 		if (CalculatedVoltage < IndicationVoltage) { IndicationVoltage--;}
-		if (AmperageDifference < 10) {IsCharging = 1;}
+		if (AmperageDifference < 10 || RollingVoltage > 4200) {IsCharging = 1;}
 	} else {
 	//printf("\nCharging");
 		if (CalculatedVoltage > IndicationVoltage) { IndicationVoltage++;}
@@ -139,12 +150,12 @@ system("/home/pi/driver/./pngview -n -b 0 -l 100000 -x 765 -y 5 /home/pi/driver/
 	if (IndicationVoltage > 4027) {ChargeStatus = 9;}
 	if (IndicationVoltage > 4200) {ChargeStatus = 99;}
 	if ((PreviousChargeStatus != ChargeStatus) || (PreviousIsCharging != IsCharging)) {
-		printf("\nChanging Battery Status");
+		//printf("\nChanging Battery Status");
 		char temp[512];
-		sprintf(temp, "/home/pi/driver/./pngviewtemp -n -b 0 -l 100000 -x 765 -y 5 /home/pi/driver/battery%d%d.png &",IsCharging,ChargeStatus);
+		sprintf(temp, "/boot/PSPi/Driver/./pngviewtemp -n -b 0 -l 100000 -x 765 -y 5 /boot/PSPi/Driver/PNG/battery%d%d.png &",IsCharging,ChargeStatus);
 		system((char *)temp);
 		system ("sudo killall pngview");
-		sprintf(temp, "/home/pi/driver/./pngview -n -b 0 -l 100000 -x 765 -y 5 /home/pi/driver/battery%d%d.png &",IsCharging,ChargeStatus);
+		sprintf(temp, "/boot/PSPi/Driver/./pngview -n -b 0 -l 100000 -x 765 -y 5 /boot/PSPi/Driver/PNG/battery%d%d.png &",IsCharging,ChargeStatus);
 		system((char *)temp);
 		system ("sudo killall pngviewtemp");
 	}

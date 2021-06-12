@@ -21,7 +21,7 @@ const int BTN_DIS = 9;
 const int BTN_MUTE = 11;
 int PWMarray[] = {55,62,69,75,80,90,100,255};
 int PWMposition = 1;
-int BTN_DIS_STATUS = 0;
+int BTN_DISPLAY_STATUS = 0;
 int BTN_MUTE_STATUS = 0;
 const int rolling = 64;
 uint16_t AVGvolt = 119 * rolling;
@@ -35,15 +35,15 @@ uint16_t AVGamp = 119 * rolling;
 #define BTN_B           0x01
 #define BTN_X           0x02
 #define BTN_Y           0x03
-#define BTN_LT          0x04
-#define BTN_RT          0x05
-#define BTN_SL          0x06
-#define BTN_ST          0x07
-#define BTN_U           0x08
-#define BTN_D           0x09
-#define BTN_L           0x0A
-#define BTN_R           0x0B
-#define BTN_H           0x0C
+#define BTN_TL          0x04
+#define BTN_TR          0x05
+#define BTN_SELECT      0x06
+#define BTN_START       0x07
+#define BTN_DPAD_UP     0x08
+#define BTN_DPAD_DOWN   0x09
+#define BTN_DPAD_LEFT   0x0A
+#define BTN_DPAD_RIGHT  0x0B
+#define BTN_1           0x0C
 //#define BTN_DIS         0x0D
 //#define BTN_14          0x0E
 //#define BTN_15          0x0F
@@ -57,20 +57,20 @@ struct InputSwitch {
 
 // the (up to 16) buttons (arduino pin #, state, time, code)
 InputSwitch switches[] = {
-  {4,  HIGH, 0, BTN_A},    // A
-  {6,  HIGH, 0, BTN_B},    // B
-  {20, HIGH, 0, BTN_X},    // X
-  {21, HIGH, 0, BTN_Y},    // Y
-  {14, HIGH, 0, BTN_LT},   // LTRIGGER
-  {3,  HIGH, 0, BTN_RT},   // RTRIGGER
-  {8,  HIGH, 0, BTN_SL},   // SELECT
-  {7,  HIGH, 0, BTN_ST},   // START
-  {0,  HIGH, 0, BTN_U},    // UP
-  {1,  HIGH, 0, BTN_D},    // DOWN
-  {15, HIGH, 0, BTN_L},    // LEFT
-  {2,  HIGH, 0, BTN_R},    // RIGHT
-  {10, HIGH, 0, BTN_H},    // HOME
-//{9,  HIGH, 0, BTN_DIS},   // DISPLAY
+  {4,  HIGH, 0, BTN_A},          // A
+  {6,  HIGH, 0, BTN_B},          // B
+  {20, HIGH, 0, BTN_X},          // X
+  {21, HIGH, 0, BTN_Y},          // Y
+  {14, HIGH, 0, BTN_TL},         // LTRIGGER
+  {3,  HIGH, 0, BTN_TR},         // RTRIGGER
+  {8,  HIGH, 0, BTN_SELECT},     // SELECT
+  {7,  HIGH, 0, BTN_START},      // START
+  {0,  HIGH, 0, BTN_DPAD_UP},    // UP
+  {1,  HIGH, 0, BTN_DPAD_DOWN},  // DOWN
+  {15, HIGH, 0, BTN_DPAD_LEFT},  // LEFT
+  {2,  HIGH, 0, BTN_DPAD_RIGHT}, // RIGHT
+  {10, HIGH, 0, BTN_1},          // HOME
+//{9,  HIGH, 0, BTN_DIS},        // DISPLAY
 };
 
 
@@ -133,7 +133,6 @@ void setup()
   delay(1000);
   digitalWrite(MUTE_PIN, 0);
 
-
   pinMode(PWM_PIN, OUTPUT);
   analogWrite(PWM_PIN, PWMarray[PWMposition]);
   pinMode(BTN_DIS, INPUT_PULLUP);
@@ -178,9 +177,9 @@ void scanAnalog() {
   joystickStatus.voltage = AVGvolt;
   AVGamp = AVGamp - (AVGamp / rolling) + analogRead(AMPERAGE_PIN);
   joystickStatus.amperage = AVGamp;
-// outdated 
-//  if (joystickStatus.voltage < 94) {digitalWrite(LOWBATT_PIN, 1);}
-//  if (joystickStatus.voltage > 99) {digitalWrite(LOWBATT_PIN, 0);}
+// orange LED when battery is at like 3.3v. doesnt factor in amperage at the moment, and it might be best too keep it simple
+  if (joystickStatus.voltage < 6000) {digitalWrite(LOWBATT_PIN, 1);}
+  if (joystickStatus.voltage > 6300) {digitalWrite(LOWBATT_PIN, 0);}
 }
 
 void loop() {
@@ -188,14 +187,16 @@ void loop() {
 //  Scan();
   scanAnalog();
   scanInput();
-    if(digitalRead(BTN_DIS) == 0 and BTN_DIS_STATUS == 0){         // If button is pressed
-    BTN_DIS_STATUS = 1;
+
+  // clean up and maybe combine with scanInput
+    if(digitalRead(BTN_DIS) == 0 and BTN_DISPLAY_STATUS == 0){         // If button is pressed
+    BTN_DISPLAY_STATUS = 1;
     PWMposition++;
     if(PWMposition > 7) {PWMposition = 0;}
     analogWrite(PWM_PIN, PWMarray[PWMposition]);
     }
-    if(digitalRead(BTN_DIS) == 1 and BTN_DIS_STATUS == 1){         // If button is not pressed
-    BTN_DIS_STATUS = 0;
+    if(digitalRead(BTN_DIS) == 1 and BTN_DISPLAY_STATUS == 1){         // If button is not pressed
+    BTN_DISPLAY_STATUS = 0;
     }
     
     if(digitalRead(BTN_MUTE) == 0 and BTN_MUTE_STATUS == 0){         // If button is pressed

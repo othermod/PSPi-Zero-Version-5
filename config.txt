@@ -3,16 +3,12 @@
 
 #disable_splash=1
 
+dtparam=i2c_arm=on
+
 # Enable audio (loads snd_bcm2835)
 dtparam=audio=on
 disable_audio_dither=1
-	#test this and see whether there is any change
 audio_pwm_mode=2
-
-[pi4]
-# Enable DRM VC4 V3D driver on top of the dispmanx display stack
-dtoverlay=vc4-fkms-v3d
-max_framebuffers=2
 
 [all]
 #dtoverlay=vc4-fkms-v3d
@@ -54,6 +50,7 @@ gpio=25=a2,np
 gpio=26=ip,pu
 dtoverlay=gpio-poweroff,active_low="y"
 dtparam=act_led_gpio=27
+
 dtparam=act_led_activelow=yes
 
 #Configure DPI signal
