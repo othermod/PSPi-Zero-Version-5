@@ -81,12 +81,13 @@ int main(int argc, char *argv[]) {
 
 sleep(1);
 
+const int MagicNumber = 17;
 int IsCharging = 0;
 int PreviousIsCharging = 0;
-const int MagicNumber = 17;
 int ChargeStatus = 0;
 int PreviousChargeStatus = 0;
-
+int IsMute = 0;
+int PreviousIsMute = 0;
 //AVGvolt and AVGamp are the ADC readings averaged over the most recent 64 readings
 uint16_t AVGvolt = status.voltage;
 uint16_t AVGamp = status.amperage;
@@ -96,14 +97,14 @@ const int rolling = 64;
 
 int IndicationVoltage = 0;
 
-FILE * fp;
-fp = fopen ("log.csv","w");
-fprintf (fp, "Line,RollingVoltage,AmperageDifference,CalculatedVoltage,IndicationVoltage\n");
-fclose(fp);
+//FILE * fp;
+//fp = fopen ("log.csv","w");
+//fprintf (fp, "Line,RollingVoltage,AmperageDifference,CalculatedVoltage,IndicationVoltage\n");
+//fclose(fp);
 
-int line = 0;
-int count = 0;
-system("/boot/PSPi/Driver/./pngview -n -b 0 -l 100000 -x 765 -y 5 /boot/PSPi/Driver/PNG/battery10.png &");
+//int line = 0;
+//int count = 0;
+system("/home/pi/PSPi/Driver/./pngview -n -b 0 -l 100000 -x 754 -y 2 /home/pi/PSPi/Driver/PNG/battery10.png &");
   while(1) {
 //	printf("%d\n", status.voltage);
 //	printf("%d\n", status.amperage);
@@ -121,7 +122,8 @@ system("/boot/PSPi/Driver/./pngview -n -b 0 -l 100000 -x 765 -y 5 /boot/PSPi/Dri
 	AVGvolt = status.voltage;
 	AVGamp = status.amperage;
 //	printf("%d\n", IndicationVoltage);
-	//printf("%d\n", status.axis1);
+//	printf("%d\n", status.buttons);
+//	printf("%d,%d,%d\n", (status.buttons & ( 1 << 0x0D )) >> 0x0D,(status.buttons & ( 1 << 0x0E )) >> 0x0E,(status.buttons & ( 1 << 0x0F )) >> 0x0F);
 	//printf("%d\n", status.amperage);
 	int RollingVoltage = AVGvolt * 11 * 3300 / 1024 / rolling;
 	int AmperageDifference = (AVGvolt - AVGamp) * 10 / 11;
@@ -149,29 +151,31 @@ system("/boot/PSPi/Driver/./pngview -n -b 0 -l 100000 -x 765 -y 5 /boot/PSPi/Dri
 	if (IndicationVoltage > 3927) {ChargeStatus = 8;}
 	if (IndicationVoltage > 4027) {ChargeStatus = 9;}
 	if (IndicationVoltage > 4200) {ChargeStatus = 99;}
-	if ((PreviousChargeStatus != ChargeStatus) || (PreviousIsCharging != IsCharging)) {
+	PreviousIsMute = IsMute;
+	IsMute = (status.buttons & ( 1 << 0x0F )) >> 0x0F;
+	if ((PreviousChargeStatus != ChargeStatus) || (PreviousIsCharging != IsCharging) || (PreviousIsMute != IsMute)) {
 		//printf("\nChanging Battery Status");
 		char temp[512];
-		sprintf(temp, "/boot/PSPi/Driver/./pngviewtemp -n -b 0 -l 100000 -x 765 -y 5 /boot/PSPi/Driver/PNG/battery%d%d.png &",IsCharging,ChargeStatus);
-		system((char *)temp);
+//		sprintf(temp, "/home/pi/PSPi/Driver/./pngviewtemp -n -b 0 -l 100000 -x 754 -y 2 /home/pi/PSPi/Driver/PNG/battery%d%d%d.png &",IsMute,IsCharging,ChargeStatus);
+//		system((char *)temp);
 		system ("sudo killall pngview");
-		sprintf(temp, "/boot/PSPi/Driver/./pngview -n -b 0 -l 100000 -x 765 -y 5 /boot/PSPi/Driver/PNG/battery%d%d.png &",IsCharging,ChargeStatus);
+		sprintf(temp, "/home/pi/PSPi/Driver/./pngview -n -b 0 -l 100000 -x 754 -y 2 /home/pi/PSPi/Driver/PNG/battery%d%d%d.png &",IsMute,IsCharging,ChargeStatus);
 		system((char *)temp);
-		system ("sudo killall pngviewtemp");
+//		system ("sudo killall pngviewtemp");
 	}
-	count++;
-	if (count == 60) { //log once a second
-		FILE * fp;
-		fp = fopen ("log.csv","a");
-		line++;
-		fprintf (fp, "%d",line);
-		fprintf (fp, ",%d",RollingVoltage);
-		fprintf (fp, ",%d",AmperageDifference);
-		fprintf (fp, ",%d",CalculatedVoltage);
-		fprintf (fp, ",%d\n",IndicationVoltage);
-		fclose(fp);
-		count = 0;
-	}
+//	count++;
+//	if (count == 60) { //log once a second
+//		FILE * fp;
+//		fp = fopen ("log.csv","a");
+//		line++;
+//		fprintf (fp, "%d",line);
+//		fprintf (fp, ",%d",RollingVoltage);
+//		fprintf (fp, ",%d",AmperageDifference);
+//		fprintf (fp, ",%d",CalculatedVoltage);
+//		fprintf (fp, ",%d\n",IndicationVoltage);
+//		fclose(fp);
+//		count = 0;
+//	}
     // sleep until next update
     usleep(UPDATE_FREQ);
   }
