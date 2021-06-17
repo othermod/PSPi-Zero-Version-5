@@ -17,12 +17,10 @@
 //Digital
 #define LOWBATT_PIN 12
 #define MUTE_PIN 13
-const int BTN_DIS = 9;
-const int BTN_MUTE = 11;
 int PWMarray[] = {55,62,69,75,80,90,100,255};
 int PWMposition = 1;
 int BTN_DISPLAY_STATUS = 0;
-int BTN_MUTE_STATUS = 0;
+int MUTE_STATUS = 0;
 const int rolling = 64;
 uint16_t AVGvolt = 119 * rolling;
 uint16_t AVGamp = 119 * rolling;
@@ -44,9 +42,9 @@ uint16_t AVGamp = 119 * rolling;
 #define BTN_DPAD_LEFT   0x0A
 #define BTN_DPAD_RIGHT  0x0B
 #define BTN_1           0x0C
-//#define BTN_DIS         0x0D
-//#define BTN_14          0x0E
-//#define BTN_15          0x0F
+#define BTN_DISPLAY     0x0D
+#define BTN_MUTE        0x0E
+#define MUTE_OUTPUT     0x0F
 
 struct InputSwitch {
   unsigned char pin;
@@ -70,21 +68,19 @@ InputSwitch switches[] = {
   {15, HIGH, 0, BTN_DPAD_LEFT},  // LEFT
   {2,  HIGH, 0, BTN_DPAD_RIGHT}, // RIGHT
   {10, HIGH, 0, BTN_1},          // HOME
-//{9,  HIGH, 0, BTN_DIS},        // DISPLAY
+  {9,  HIGH, 0, BTN_DISPLAY},    // DISPLAY BUTTON
+  {11, HIGH, 0, BTN_MUTE},       // MUTE BUTTON
+  {13, HIGH, 0, MUTE_OUTPUT},    // MUTE STATUS
 };
-
 
 // return true if switch state has changed!
 bool updateSwitch(struct InputSwitch *sw) {
   int newState = digitalRead(sw->pin);
-
   if(newState != sw->state && millis() - sw->time > SWITCH_DEBOUNCE_TIME) {
     // change state!
     sw->state = newState;
-
     // record last update
     sw->time = millis();
-    
     return true;
   }
 
@@ -103,42 +99,24 @@ struct I2CJoystickStatus {
 
 I2CJoystickStatus joystickStatus;
 
-//void (*stateFunction)(void);
-//unsigned long wakeUpTime = 0;
-
-//void Scan() {
-  // update switch etc
-//  scanAnalog();
-//  scanInput();
-//}
-
 void setup()
 {
   Wire.begin(I2C_ADDRESS);      // join i2c bus 
   Wire.onRequest(requestEvent); // register event
-  //change pwm frequency
-//  TCCR0B = TCCR0B & B11111000 | B00000001;
-  //Start PWM
+
+  //Blink the Low Battery LED to show that ATMega is starting
   pinMode(LOWBATT_PIN, OUTPUT);
   digitalWrite(LOWBATT_PIN, 0);
-  delay(1000);
+  delay(500);
   digitalWrite(LOWBATT_PIN, 1);
-  delay(1000);
+  delay(500);
   digitalWrite(LOWBATT_PIN, 0);
-  
-  pinMode(MUTE_PIN, OUTPUT);
-  digitalWrite(MUTE_PIN, 0);
-  delay(1000);
-  digitalWrite(MUTE_PIN, 1);
-  delay(1000);
-  digitalWrite(MUTE_PIN, 0);
+  delay(500);
+  digitalWrite(LOWBATT_PIN, 1);
+  delay(500);
+  digitalWrite(LOWBATT_PIN, 0);
 
-  pinMode(PWM_PIN, OUTPUT);
-  analogWrite(PWM_PIN, PWMarray[PWMposition]);
-  pinMode(BTN_DIS, INPUT_PULLUP);
-  pinMode(BTN_MUTE, INPUT_PULLUP);
-
-  // default status
+  // default button and joystick status
   joystickStatus.buttons = 0;
   joystickStatus.axis0 = 127;
   joystickStatus.axis1 = 127;
@@ -147,7 +125,33 @@ void setup()
   for(int i = 0; i < sizeof(switches) / sizeof(InputSwitch); i++) {
     pinMode(switches[i].pin, INPUT_PULLUP);
   }
-//  stateFunction = Scan;
+
+  //Unmute audio at startup. Was previously muted by pin config
+  pinMode(13, OUTPUT);
+  digitalWrite(13, 0);
+  //Start PWM
+  pinMode(PWM_PIN, OUTPUT);
+  analogWrite(PWM_PIN, PWMarray[PWMposition]);
+  //these are already done in the loop above, remove after verifying
+//  pinMode(9, INPUT_PULLUP);
+//  pinMode(11, INPUT_PULLUP);
+}
+
+void scanAnalog() {
+  // read analog stick values, change to 8 bit because it doesnt need more accuracy
+  // store them in the I2C data
+  joystickStatus.axis0 = analogRead(ANALOG_PIN_X) / 4;
+  joystickStatus.axis1 = analogRead(ANALOG_PIN_Y) / 4;
+  
+  // Read raw power status. Keep a rolling average of the readings. Divide the readings by 64 on Pi to get the ADC value.
+  AVGvolt = AVGvolt - (AVGvolt / rolling) + analogRead(VOLTAGE_PIN);
+  joystickStatus.voltage = AVGvolt;
+  AVGamp = AVGamp - (AVGamp / rolling) + analogRead(AMPERAGE_PIN);
+  joystickStatus.amperage = AVGamp;
+// orange LED when battery is below 3.3v
+  if (joystickStatus.voltage < 6000) {digitalWrite(LOWBATT_PIN, 1);}
+//  green LED when battery is above 3.5v
+  if (joystickStatus.voltage > 6300) {digitalWrite(LOWBATT_PIN, 0);}
 }
 
 void scanInput() {
@@ -159,55 +163,32 @@ void scanInput() {
         joystickStatus.buttons |= (1 << switches[i].code);
     }
   }
-
   static uint16_t oldButtons = 0;
   if(joystickStatus.buttons != oldButtons) {
     oldButtons = joystickStatus.buttons;
   }
 }
 
-void scanAnalog() {
-  // read analog stick values, change to 8 bit because it doesnt need more accuracy
-  // store them in the I2C data
-  joystickStatus.axis0 = analogRead(ANALOG_PIN_X) / 4;
-  joystickStatus.axis1 = analogRead(ANALOG_PIN_Y) / 4;
-  // read raw power status. calculations might eventually be done on atmega and sent to Pi
-  // this is sent over 8 bits because the maximum value is below 255
-  AVGvolt = AVGvolt - (AVGvolt / rolling) + analogRead(VOLTAGE_PIN);
-  joystickStatus.voltage = AVGvolt;
-  AVGamp = AVGamp - (AVGamp / rolling) + analogRead(AMPERAGE_PIN);
-  joystickStatus.amperage = AVGamp;
-// orange LED when battery is at like 3.3v. doesnt factor in amperage at the moment, and it might be best too keep it simple
-  if (joystickStatus.voltage < 6000) {digitalWrite(LOWBATT_PIN, 1);}
-  if (joystickStatus.voltage > 6300) {digitalWrite(LOWBATT_PIN, 0);}
-}
-
 void loop() {
-  // execute state function
-//  Scan();
   scanAnalog();
   scanInput();
-
-  // clean up and maybe combine with scanInput
-    if(digitalRead(BTN_DIS) == 0 and BTN_DISPLAY_STATUS == 0){         // If button is pressed
+  // clean up and maybe combine with scanInput since tasks are being performed twice
+    if(digitalRead(9) == 0 and BTN_DISPLAY_STATUS == 0){         // If button is pressed
     BTN_DISPLAY_STATUS = 1;
     PWMposition++;
     if(PWMposition > 7) {PWMposition = 0;}
     analogWrite(PWM_PIN, PWMarray[PWMposition]);
     }
-    if(digitalRead(BTN_DIS) == 1 and BTN_DISPLAY_STATUS == 1){         // If button is not pressed
+    if(digitalRead(9) == 1 and BTN_DISPLAY_STATUS == 1){         // If button is not pressed
     BTN_DISPLAY_STATUS = 0;
     }
-    
-    if(digitalRead(BTN_MUTE) == 0 and BTN_MUTE_STATUS == 0){         // If button is pressed
-    digitalWrite(MUTE_PIN, (! digitalRead(MUTE_PIN)));
-    BTN_MUTE_STATUS = 1;
+    if(digitalRead(11) == 0 and MUTE_STATUS == 0){         // If button is pressed
+    digitalWrite(13, (! digitalRead(13)));
+    MUTE_STATUS = 1;
     }
-    if(digitalRead(BTN_MUTE) == 1 and BTN_MUTE_STATUS == 1){         // If button is not pressed
-    BTN_MUTE_STATUS = 0;
+    if(digitalRead(11) == 1 and MUTE_STATUS == 1){         // If button is not pressed
+    MUTE_STATUS = 0;
     }
-
-  //was set to 10, im testing
   delay(10);
 }
 
