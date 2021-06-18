@@ -84,7 +84,7 @@ sleep(1);
 const int MagicNumber = 17;
 int IsCharging = 0;
 int PreviousIsCharging = 0;
-int ChargeStatus = 0;
+int ChargeStatus = 11;
 int PreviousChargeStatus = 0;
 int IsMute = 0;
 int PreviousIsMute = 0;
@@ -104,7 +104,7 @@ int IndicationVoltage = 0;
 
 //int line = 0;
 //int count = 0;
-system("/home/pi/PSPi/Driver/./pngview -n -b 0 -l 100000 -x 754 -y 2 /home/pi/PSPi/Driver/PNG/battery10.png &");
+system("/home/pi/PSPi/Driver/./pngview -n -b 0 -l 100000 -x 754 -y 2 /home/pi/PSPi/Driver/PNG/batterystart.png &");
   while(1) {
 //	printf("%d\n", status.voltage);
 //	printf("%d\n", status.amperage);
@@ -123,7 +123,7 @@ system("/home/pi/PSPi/Driver/./pngview -n -b 0 -l 100000 -x 754 -y 2 /home/pi/PS
 	AVGamp = status.amperage;
 //	printf("%d\n", IndicationVoltage);
 //	printf("%d\n", status.buttons);
-//	printf("%d,%d,%d\n", (status.buttons & ( 1 << 0x0D )) >> 0x0D,(status.buttons & ( 1 << 0x0E )) >> 0x0E,(status.buttons & ( 1 << 0x0F )) >> 0x0F);
+//	printf("%d,%d,%d\n", (status.buttons >> 0x0D) & 1,(status.buttons >> 0x0E) & 1,(status.buttons >> 0x0F) & 1);
 	//printf("%d\n", status.amperage);
 	int RollingVoltage = AVGvolt * 11 * 3300 / 1024 / rolling;
 	int AmperageDifference = (AVGvolt - AVGamp) * 10 / 11;
@@ -152,7 +152,7 @@ system("/home/pi/PSPi/Driver/./pngview -n -b 0 -l 100000 -x 754 -y 2 /home/pi/PS
 	if (IndicationVoltage > 4027) {ChargeStatus = 9;}
 	if (IndicationVoltage > 4200) {ChargeStatus = 99;}
 	PreviousIsMute = IsMute;
-	IsMute = (status.buttons & ( 1 << 0x0F )) >> 0x0F;
+	IsMute = (status.buttons >> 0x0F) & 1;
 	if ((PreviousChargeStatus != ChargeStatus) || (PreviousIsCharging != IsCharging) || (PreviousIsMute != IsMute)) {
 		//printf("\nChanging Battery Status");
 		char temp[512];
