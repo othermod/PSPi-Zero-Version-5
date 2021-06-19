@@ -14,19 +14,18 @@
 #define VOLTAGE_PIN 2
 #define AMPERAGE_PIN 3
 
-//Digital
+//Output
+#define PWM_PIN 5
 #define LOWBATT_PIN 12
 #define MUTE_PIN 13
+
 int PWMarray[] = {55,62,69,75,80,90,100,255};
 int PWMposition = 1;
-int BTN_DISPLAY_STATUS = 0;
-int MUTE_STATUS = 0;
+bool DisplayButtonPressed = 0;
+bool MuteButtonPressed = 0;
 const int rolling = 64;
 uint16_t AVGvolt = 119 * rolling;
 uint16_t AVGamp = 119 * rolling;
-
-//PWM
-#define PWM_PIN 5
 
 // switch type definition
 #define BTN_A           0x00
@@ -99,8 +98,7 @@ struct I2CJoystickStatus {
 
 I2CJoystickStatus joystickStatus;
 
-void setup()
-{
+void setup() {
   Wire.begin(I2C_ADDRESS);      // join i2c bus 
   Wire.onRequest(requestEvent); // register event
 
@@ -126,31 +124,29 @@ void setup()
     pinMode(switches[i].pin, INPUT_PULLUP);
   }
 
-  //Unmute audio at startup. Was previously muted by pin config
-  pinMode(13, OUTPUT);
-  digitalWrite(13, 0);
-  //Start PWM
+  //Unmute audio at startup and put the pin set it as output (the loop above set it to input).
+  pinMode(MUTE_PIN, OUTPUT);
+  digitalWrite(MUTE_PIN, 0);
+  
+  //Start initial brightness setting on PWM pin
   pinMode(PWM_PIN, OUTPUT);
   analogWrite(PWM_PIN, PWMarray[PWMposition]);
-  //these are already done in the loop above, remove after verifying
-//  pinMode(9, INPUT_PULLUP);
-//  pinMode(11, INPUT_PULLUP);
+
 }
 
 void scanAnalog() {
   // read analog stick values, change to 8 bit because it doesnt need more accuracy
-  // store them in the I2C data
   joystickStatus.axis0 = analogRead(ANALOG_PIN_X) / 4;
   joystickStatus.axis1 = analogRead(ANALOG_PIN_Y) / 4;
   
-  // Read raw power status. Keep a rolling average of the readings. Divide the readings by 64 on Pi to get the ADC value.
+  // Keep a rolling average of the battery and amperage ADC readings. Divide the readings by "rolling" on Pi to get the ADC value.
   AVGvolt = AVGvolt - (AVGvolt / rolling) + analogRead(VOLTAGE_PIN);
   joystickStatus.voltage = AVGvolt;
   AVGamp = AVGamp - (AVGamp / rolling) + analogRead(AMPERAGE_PIN);
   joystickStatus.amperage = AVGamp;
-// orange LED when battery is below 3.3v
+  
+  //Orange LED when battery is below 3.3v. Green LED when battery is above 3.5v.
   if (joystickStatus.voltage < 6000) {digitalWrite(LOWBATT_PIN, 1);}
-//  green LED when battery is above 3.5v
   if (joystickStatus.voltage > 6300) {digitalWrite(LOWBATT_PIN, 0);}
 }
 
@@ -169,26 +165,35 @@ void scanInput() {
   }
 }
 
+void checkDisplay() {
+    if((joystickStatus.buttons >> BTN_DISPLAY) & 1 == 0 and DisplayButtonPressed == 0){         // If Display button is pressed
+      DisplayButtonPressed = 1;
+      PWMposition++;
+      if(PWMposition > 7) {                                                                     // Cycle to next brightness setting
+        PWMposition = 0;
+      }
+      analogWrite(PWM_PIN, PWMarray[PWMposition]);                                              // Change brightness
+    }
+    if((joystickStatus.buttons >> BTN_DISPLAY) & 1 == 1 and DisplayButtonPressed == 1){         // If Display button is not pressed
+      DisplayButtonPressed = 0;
+    }
+}
+
+void checkMute() {
+    if((joystickStatus.buttons >> BTN_MUTE) & 1 == 0 and MuteButtonPressed == 0){               // If Mute button is pressed
+      digitalWrite(MUTE_PIN, (! digitalRead(MUTE_PIN)));                                        // Mute or Unmute Audio Amplifier
+      MuteButtonPressed = 1;
+    }
+    if((joystickStatus.buttons >> BTN_MUTE) & 1 == 1 and MuteButtonPressed == 1){               // If Mute button is not pressed
+      MuteButtonPressed = 0;
+    }
+}
+
 void loop() {
   scanAnalog();
   scanInput();
-  // clean up and maybe combine with scanInput since tasks are being performed twice
-    if(digitalRead(9) == 0 and BTN_DISPLAY_STATUS == 0){         // If button is pressed
-    BTN_DISPLAY_STATUS = 1;
-    PWMposition++;
-    if(PWMposition > 7) {PWMposition = 0;}
-    analogWrite(PWM_PIN, PWMarray[PWMposition]);
-    }
-    if(digitalRead(9) == 1 and BTN_DISPLAY_STATUS == 1){         // If button is not pressed
-    BTN_DISPLAY_STATUS = 0;
-    }
-    if(digitalRead(11) == 0 and MUTE_STATUS == 0){         // If button is pressed
-    digitalWrite(13, (! digitalRead(13)));
-    MUTE_STATUS = 1;
-    }
-    if(digitalRead(11) == 1 and MUTE_STATUS == 1){         // If button is not pressed
-    MUTE_STATUS = 0;
-    }
+  checkDisplay();
+  checkMute();
   delay(10);
 }
 
