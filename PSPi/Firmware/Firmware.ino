@@ -27,7 +27,7 @@ const int rolling = 64;
 uint16_t AVGvolt = 119 * rolling;
 uint16_t AVGamp = 119 * rolling;
 
-// switch type definition
+// button position in uint16_t buttons
 #define BTN_A           0x00
 #define BTN_B           0x01
 #define BTN_X           0x02
@@ -166,7 +166,7 @@ void scanInput() {
 }
 
 void checkDisplay() {
-    if((joystickStatus.buttons >> BTN_DISPLAY) & 1 == 0 and DisplayButtonPressed == 0){         // If Display button is pressed
+    if((((joystickStatus.buttons >> BTN_DISPLAY) & 1) == 1) and (DisplayButtonPressed == 0)){         // If Display button is pressed
       DisplayButtonPressed = 1;
       PWMposition++;
       if(PWMposition > 7) {                                                                     // Cycle to next brightness setting
@@ -174,17 +174,17 @@ void checkDisplay() {
       }
       analogWrite(PWM_PIN, PWMarray[PWMposition]);                                              // Change brightness
     }
-    if((joystickStatus.buttons >> BTN_DISPLAY) & 1 == 1 and DisplayButtonPressed == 1){         // If Display button is not pressed
+    if((((joystickStatus.buttons >> BTN_DISPLAY) & 1) == 0) and (DisplayButtonPressed == 1)){         // If Display button is not pressed
       DisplayButtonPressed = 0;
     }
 }
 
 void checkMute() {
-    if((joystickStatus.buttons >> BTN_MUTE) & 1 == 0 and MuteButtonPressed == 0){               // If Mute button is pressed
+    if((((joystickStatus.buttons >> BTN_MUTE) & 1) == 1) and (MuteButtonPressed == 0)){               // If Mute button is pressed
       digitalWrite(MUTE_PIN, (! digitalRead(MUTE_PIN)));                                        // Mute or Unmute Audio Amplifier
       MuteButtonPressed = 1;
     }
-    if((joystickStatus.buttons >> BTN_MUTE) & 1 == 1 and MuteButtonPressed == 1){               // If Mute button is not pressed
+    if((((joystickStatus.buttons >> BTN_MUTE) & 1) == 0) and (MuteButtonPressed == 1)){               // If Mute button is not pressed
       MuteButtonPressed = 0;
     }
 }
