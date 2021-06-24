@@ -23,6 +23,7 @@ int PWMarray[] = {55,62,69,75,80,90,100,255};
 int PWMposition = 1;
 bool DisplayButtonPressed = 0;
 bool MuteButtonPressed = 0;
+bool forcedOrangeLED = 0;
 const int rolling = 64;
 uint16_t AVGvolt = 119 * rolling;
 uint16_t AVGamp = 119 * rolling;
@@ -92,8 +93,8 @@ struct I2CJoystickStatus {
   uint16_t buttons; // button status
   uint8_t axis0; // first axis
   uint8_t axis1; // second axis
-  uint16_t voltage; //
-  uint16_t amperage; //
+  uint16_t voltage; // rolling average of voltage
+  uint16_t amperage; // rolling average of amperage
 };
 
 I2CJoystickStatus joystickStatus;
@@ -101,6 +102,7 @@ I2CJoystickStatus joystickStatus;
 void setup() {
   Wire.begin(I2C_ADDRESS);      // join i2c bus 
   Wire.onRequest(requestEvent); // register event
+  Wire.onReceive(receiveEvent); // register event
 
   //Blink the Low Battery LED to show that ATMega is starting
   pinMode(LOWBATT_PIN, OUTPUT);
@@ -146,8 +148,8 @@ void scanAnalog() {
   joystickStatus.amperage = AVGamp;
   
   //Orange LED when battery is below 3.3v. Green LED when battery is above 3.5v.
-  if (joystickStatus.voltage < 6000) {digitalWrite(LOWBATT_PIN, 1);}
-  if (joystickStatus.voltage > 6300) {digitalWrite(LOWBATT_PIN, 0);}
+  if (joystickStatus.voltage < 6000 or forcedOrangeLED == 1) {digitalWrite(LOWBATT_PIN, 1);}
+  if (joystickStatus.voltage > 6300 and forcedOrangeLED == 0) {digitalWrite(LOWBATT_PIN, 0);}
 }
 
 void scanInput() {
@@ -166,7 +168,7 @@ void scanInput() {
 }
 
 void checkDisplay() {
-    if((((joystickStatus.buttons >> BTN_DISPLAY) & 1) == 1) and (DisplayButtonPressed == 0)){         // If Display button is pressed
+    if((((joystickStatus.buttons >> BTN_DISPLAY) & 1) == 1) and (DisplayButtonPressed == 0)){   // If Display button is pressed
       DisplayButtonPressed = 1;
       PWMposition++;
       if(PWMposition > 7) {                                                                     // Cycle to next brightness setting
@@ -174,17 +176,17 @@ void checkDisplay() {
       }
       analogWrite(PWM_PIN, PWMarray[PWMposition]);                                              // Change brightness
     }
-    if((((joystickStatus.buttons >> BTN_DISPLAY) & 1) == 0) and (DisplayButtonPressed == 1)){         // If Display button is not pressed
+    if((((joystickStatus.buttons >> BTN_DISPLAY) & 1) == 0) and (DisplayButtonPressed == 1)){   // If Display button is not pressed
       DisplayButtonPressed = 0;
     }
 }
 
 void checkMute() {
-    if((((joystickStatus.buttons >> BTN_MUTE) & 1) == 1) and (MuteButtonPressed == 0)){               // If Mute button is pressed
+    if((((joystickStatus.buttons >> BTN_MUTE) & 1) == 1) and (MuteButtonPressed == 0)){         // If Mute button is pressed
       digitalWrite(MUTE_PIN, (! digitalRead(MUTE_PIN)));                                        // Mute or Unmute Audio Amplifier
       MuteButtonPressed = 1;
     }
-    if((((joystickStatus.buttons >> BTN_MUTE) & 1) == 0) and (MuteButtonPressed == 1)){               // If Mute button is not pressed
+    if((((joystickStatus.buttons >> BTN_MUTE) & 1) == 0) and (MuteButtonPressed == 1)){         // If Mute button is not pressed
       MuteButtonPressed = 0;
     }
 }
@@ -201,4 +203,22 @@ void loop() {
 // this function is registered as an event, see setup()
 void requestEvent() {
   Wire.write((char *)&joystickStatus, sizeof(I2CJoystickStatus)); 
+}
+
+void receiveEvent(int numBytes) {
+  uint8_t receivedData = Wire.read();
+  if (receivedData == 0)
+    analogWrite(PWM_PIN, 0);
+  if (receivedData == 1)
+    analogWrite(PWM_PIN, PWMarray[PWMposition]);
+  if (receivedData == 2)
+    digitalWrite(MUTE_PIN, 0);
+  if (receivedData == 3)
+    digitalWrite(MUTE_PIN, 1);
+  if (receivedData == 4)
+    forcedOrangeLED = 1;
+  if (receivedData == 5)
+    forcedOrangeLED = 0;
+  if (receivedData > 40)
+    analogWrite(PWM_PIN, receivedData);
 }
