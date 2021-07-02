@@ -1,5 +1,5 @@
 # PSPi Zero Version 5
-![PSPi Zero](https://othermod.com/wp-content/uploads/IMG_8554.jpg)
+![PSPi Zero](https://othermod.com/wp-content/uploads/IMG_8727.jpg)
  
 Option 1 - Installation Instructions Using Image
 
