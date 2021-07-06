@@ -148,8 +148,8 @@ void scanAnalog() {
   joystickStatus.amperage = AVGamp;
   
   //Orange LED when battery is below 3.3v. Green LED when battery is above 3.5v.
-  if (joystickStatus.voltage < 6000 or forcedOrangeLED == 1) {digitalWrite(LOWBATT_PIN, 1);}
-  if (joystickStatus.voltage > 6300 and forcedOrangeLED == 0) {digitalWrite(LOWBATT_PIN, 0);}
+  if ((joystickStatus.voltage < 6000) or (forcedOrangeLED == 1)) {digitalWrite(LOWBATT_PIN, 1);}
+  if ((joystickStatus.voltage > 6300) and (forcedOrangeLED == 0)) {digitalWrite(LOWBATT_PIN, 0);}
 }
 
 void scanInput() {
