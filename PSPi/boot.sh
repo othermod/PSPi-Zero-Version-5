@@ -1,1 +1,1 @@
-sudo /boot/pspi/driver/./pspi-controller &
+sudo /home/pi/PSPi/Driver/./pspi-controller &
