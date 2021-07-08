@@ -24,7 +24,6 @@ int PWMposition = 1;
 bool DisplayButtonPressed = 0;
 bool MuteButtonPressed = 0;
 bool forcedOrangeLED = 0;
-bool orangeLEDstatus = 0;
 const int rolling = 64;
 uint16_t AVGvolt = 119 * rolling;
 uint16_t AVGamp = 119 * rolling;
@@ -149,18 +148,8 @@ void scanAnalog() {
   joystickStatus.amperage = AVGamp;
   
   //Orange LED when battery is below 3.3v. Green LED when battery is above 3.5v.
-  if (orangeLEDstatus == 0){                                                  // If orange LED is off
-    if ((joystickStatus.voltage < 6000) or (forcedOrangeLED == 1)) {          // See whether orange LED should be turned on
-      digitalWrite(LOWBATT_PIN, 1);
-      orangeLEDstatus = 1;
-    }
-  }
-  else {                                                                      // If orange LED is on
-    if ((joystickStatus.voltage > 6300) and (forcedOrangeLED == 0)) {         // See whether orange LED should be turned off
-      digitalWrite(LOWBATT_PIN, 0);
-      orangeLEDstatus = 0;
-    }
-  }
+  if (joystickStatus.voltage < 6000 or forcedOrangeLED == 1) {digitalWrite(LOWBATT_PIN, 1);}
+  if (joystickStatus.voltage > 6300 and forcedOrangeLED == 0) {digitalWrite(LOWBATT_PIN, 0);}
 }
 
 void scanInput() {
@@ -179,24 +168,22 @@ void scanInput() {
 }
 
 void checkDisplay() {
-    if(((joystickStatus.buttons >> BTN_DISPLAY) & 1) == 1){                                     // Check if Display button is pressed
-      if (DisplayButtonPressed == 0){                                                           // ans wasn't pressed on the previous loop
-        DisplayButtonPressed = 1;                                                               // remember that Display button is pressed on this loop
-        PWMposition++;
-        if(PWMposition > 7) {                                                                   // Cycle to next brightness setting
-          PWMposition = 0;
-        }
-        analogWrite(PWM_PIN, PWMarray[PWMposition]);                                            // Change brightness
+    if((((joystickStatus.buttons >> BTN_DISPLAY) & 1) == 1) and (DisplayButtonPressed == 0)){   // If Display button is pressed
+      DisplayButtonPressed = 1;
+      PWMposition++;
+      if(PWMposition > 7) {                                                                     // Cycle to next brightness setting
+        PWMposition = 0;
       }
+      analogWrite(PWM_PIN, PWMarray[PWMposition]);                                              // Change brightness
     }
-    else{                                                                                       // If Display button is not pressed
-      DisplayButtonPressed = 0;                                                                 // remember that Display button is not pressed on this loop
+    if((((joystickStatus.buttons >> BTN_DISPLAY) & 1) == 0) and (DisplayButtonPressed == 1)){   // If Display button is not pressed
+      DisplayButtonPressed = 0;
     }
 }
 
 void checkMute() {
     if((((joystickStatus.buttons >> BTN_MUTE) & 1) == 1) and (MuteButtonPressed == 0)){         // If Mute button is pressed
-      digitalWrite(MUTE_PIN, (! digitalRead(MUTE_PIN)));                                        // Invert Mute Condition on Amplifier
+      digitalWrite(MUTE_PIN, (! digitalRead(MUTE_PIN)));                                        // Mute or Unmute Audio Amplifier
       MuteButtonPressed = 1;
     }
     if((((joystickStatus.buttons >> BTN_MUTE) & 1) == 0) and (MuteButtonPressed == 1)){         // If Mute button is not pressed
