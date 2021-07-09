@@ -7,8 +7,15 @@ if [ $? -eq 0 ]; then
 	sudo sed -i 's/#dtoverlay=pi3-disable-bt/dtoverlay=pi3-disable-bt/' /boot/config.txt
 	echo "Disabling services"
 	sudo systemctl disable wpa_supplicant 2> /dev/null
+	echo "-wpa_supplicant"
 	sudo systemctl disable bluetooth 2> /dev/null
+	echo "-bluetooth"
 	sudo systemctl disable hciuart 2> /dev/null
+	echo "-hciuart"
+	sudo update-rc.d nmbd disable 2> /dev/null
+	echo "-smbd"
+	sudo systemctl stop smbd 2> /dev/null
+	sudo systemctl disable smbd 2> /dev/null
 	echo "Rebooting"
 	sleep 1
 	sudo reboot
