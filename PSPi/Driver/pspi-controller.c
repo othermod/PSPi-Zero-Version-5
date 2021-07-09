@@ -1,10 +1,10 @@
-
-
 // http://elinux.org/Interfacing_with_I2C_Devices
 #include <stdio.h>
 #include <stdlib.h>
 #include "I2C.h"
 #include "JoystickDevice.h"
+#include <unistd.h>
+
 
 #define I2C_GAMEPAD_ADDRESS 0x18
 #define UPDATE_FREQ 16666 // ms (60Hz)
@@ -48,10 +48,10 @@ void updateUInputDevice(int UInputFIle, I2CJoystickStatus *newStatus, I2CJoystic
 //  TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x0F, BTN_4);
   // joystick axis
   uint8_t val = newStatus->axis0;
-  if (val > 107 & val < 147) {val = 127;}
+  if (val > 117 & val < 137) {val = 127;}
   if (val != status->axis0) {sendInputEvent(UInputFIle, EV_ABS, ABS_X, val);}
   val = newStatus->axis1;
-  if (val > 107 & val < 147) {val = 127;}
+  if (val > 117 & val < 137) {val = 127;}
   if (val != status->axis1) {sendInputEvent(UInputFIle, EV_ABS, ABS_Y, val);}
 }
 
@@ -77,8 +77,6 @@ int main(int argc, char *argv[]) {
 	  sleep(1);
     }
 
-//edit names so its more clear what is what
-
 sleep(1);
 
 const int MagicNumber = 17;
@@ -92,7 +90,7 @@ int PreviousIsMute = 0;
 uint16_t AVGvolt = status.voltage;
 uint16_t AVGamp = status.amperage;
 
-//rolling is the number is number of readings being averaged together
+//rolling is the number of readings being averaged together
 const int rolling = 64;
 
 int IndicationVoltage = 0;
@@ -101,70 +99,61 @@ int IndicationVoltage = 0;
 //fp = fopen ("log.csv","w");
 //fprintf (fp, "Line,RollingVoltage,AmperageDifference,CalculatedVoltage,IndicationVoltage\n");
 //fclose(fp);
-
 //int line = 0;
-//int count = 0;
+
 system("/home/pi/PSPi/Driver/./pngview -n -b 0 -l 100000 -x 754 -y 2 /home/pi/PSPi/Driver/PNG/batterystart.png &");
   while(1) {
-//	printf("%d\n", status.voltage);
-//	printf("%d\n", status.amperage);
     // read new status from I2C
     I2CJoystickStatus newStatus;
     if(readI2CJoystick(I2CFile, &newStatus) != 0) {
-      printf("Controller is not detected on the I2C bus.\n");
-	sleep(1);
+		printf("Controller is not detected on the I2C bus.\n");
+		sleep(1);
     } else {
-      // everything is ok
-      updateUInputDevice(UInputFIle, &newStatus, &status);
-      status = newStatus;
+		// everything is ok
+		updateUInputDevice(UInputFIle, &newStatus, &status);
+		status = newStatus;
     }
-
 	AVGvolt = status.voltage;
 	AVGamp = status.amperage;
-//	printf("%d\n", IndicationVoltage);
-//	printf("%d\n", status.buttons);
-//	printf("%d,%d,%d\n", (status.buttons >> 0x0D) & 1,(status.buttons >> 0x0E) & 1,(status.buttons >> 0x0F) & 1);
-	//printf("%d\n", status.amperage);
 	int RollingVoltage = AVGvolt * 11 * 3300 / 1024 / rolling;
 	int AmperageDifference = (AVGvolt - AVGamp) * 10 / 11;
 	int CalculatedVoltage = RollingVoltage + AmperageDifference * 10 / MagicNumber;
 	PreviousIsCharging = IsCharging;
 	if (IndicationVoltage == 0) {IndicationVoltage = CalculatedVoltage;}
 	if (IsCharging == 0) {
-	//printf("\nDischarging");
+		//printf("\nDischarging");
 		if (CalculatedVoltage < IndicationVoltage) { IndicationVoltage--;}
 		if (AmperageDifference < 10 || RollingVoltage > 4200) {IsCharging = 1;}
 	} else {
-	//printf("\nCharging");
+		//printf("\nCharging");
 		if (CalculatedVoltage > IndicationVoltage) { IndicationVoltage++;}
 		if (AmperageDifference > 100) {IsCharging = 0;}
-		}
-	PreviousChargeStatus = ChargeStatus;
-	ChargeStatus = 0;
-	if (IndicationVoltage > 3478) {ChargeStatus = 1;}
-	if (IndicationVoltage > 3549) {ChargeStatus = 2;}
-	if (IndicationVoltage > 3619) {ChargeStatus = 3;}
-	if (IndicationVoltage > 3655) {ChargeStatus = 4;}
-	if (IndicationVoltage > 3725) {ChargeStatus = 5;}
-	if (IndicationVoltage > 3761) {ChargeStatus = 6;}
-	if (IndicationVoltage > 3866) {ChargeStatus = 7;}
-	if (IndicationVoltage > 3927) {ChargeStatus = 8;}
-	if (IndicationVoltage > 4027) {ChargeStatus = 9;}
-	if (IndicationVoltage > 4200) {ChargeStatus = 99;}
-	PreviousIsMute = IsMute;
-	IsMute = (status.buttons >> 0x0F) & 1;
-	if ((PreviousChargeStatus != ChargeStatus) || (PreviousIsCharging != IsCharging) || (PreviousIsMute != IsMute)) {
-		//printf("\nChanging Battery Status");
-		char temp[512];
-//		sprintf(temp, "/home/pi/PSPi/Driver/./pngviewtemp -n -b 0 -l 100000 -x 754 -y 2 /home/pi/PSPi/Driver/PNG/battery%d%d%d.png &",IsMute,IsCharging,ChargeStatus);
-//		system((char *)temp);
-		system ("sudo killall pngview");
-		sprintf(temp, "/home/pi/PSPi/Driver/./pngview -n -b 0 -l 100000 -x 754 -y 2 /home/pi/PSPi/Driver/PNG/battery%d%d%d.png &",IsMute,IsCharging,ChargeStatus);
-		system((char *)temp);
-//		system ("sudo killall pngviewtemp");
 	}
-//	count++;
-//	if (count == 60) { //log once a second
+		PreviousChargeStatus = ChargeStatus;
+		ChargeStatus = 0;
+		if (IndicationVoltage > 3478) {ChargeStatus = 1;}
+		if (IndicationVoltage > 3549) {ChargeStatus = 2;}
+		if (IndicationVoltage > 3619) {ChargeStatus = 3;}
+		if (IndicationVoltage > 3655) {ChargeStatus = 4;}
+		if (IndicationVoltage > 3725) {ChargeStatus = 5;}
+		if (IndicationVoltage > 3761) {ChargeStatus = 6;}
+		if (IndicationVoltage > 3866) {ChargeStatus = 7;}
+		if (IndicationVoltage > 3927) {ChargeStatus = 8;}
+		if (IndicationVoltage > 4027) {ChargeStatus = 9;}
+		if (IndicationVoltage > 4175) {ChargeStatus = 99;}
+		PreviousIsMute = IsMute;
+		IsMute = (status.buttons >> 0x0F) & 1;
+		if ((PreviousChargeStatus != ChargeStatus) || (PreviousIsCharging != IsCharging) || (PreviousIsMute != IsMute)) {
+			//printf("\nChanging Battery Status");
+			char temp[512];
+			//sprintf(temp, "/home/pi/PSPi/Driver/./pngviewtemp -n -b 0 -l 100000 -x 754 -y 2 /home/pi/PSPi/Driver/PNG/battery%d%d%d.png &",IsMute,IsCharging,ChargeStatus);
+			//system((char *)temp);
+			system ("sudo killall pngview");
+			sprintf(temp, "/home/pi/PSPi/Driver/./pngview -n -b 0 -l 100000 -x 754 -y 2 /home/pi/PSPi/Driver/PNG/battery%d%d%d.png &",IsMute,IsCharging,ChargeStatus);
+			system((char *)temp);
+//		system ("sudo killall pngviewtemp");
+		}
+
 //		FILE * fp;
 //		fp = fopen ("log.csv","a");
 //		line++;
@@ -174,8 +163,7 @@ system("/home/pi/PSPi/Driver/./pngview -n -b 0 -l 100000 -x 754 -y 2 /home/pi/PS
 //		fprintf (fp, ",%d",CalculatedVoltage);
 //		fprintf (fp, ",%d\n",IndicationVoltage);
 //		fclose(fp);
-//		count = 0;
-//	}
+
     // sleep until next update
     usleep(UPDATE_FREQ);
   }
