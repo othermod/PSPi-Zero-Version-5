@@ -7,8 +7,11 @@ if [ $(id -u) -ne 0 ]; then
 fi
 
 killall emulationstatio 2>/dev/null
+killall pspi-controller 2>/dev/null
+killall pngview 2>/dev/null
 sleep 1
 echo "Copying files"
+
 # add boot script to rc.local
 grep pspi /etc/rc.local >/dev/null
 if [ $? -eq 0 ]; then
@@ -52,32 +55,47 @@ cp -f /boot/PSPi/Theme/carbon.xml /etc/emulationstation/themes/carbon/carbon.xml
 # Remove verbose startup/shutdown to shave time off startup
 grep fastboot /boot/cmdline.txt >/dev/null
 if [ $? -eq 0 ]; then
-        echo "Found"
-        # pspi already in rc.local, but make sure correct:
-        #sed -i "s/^.*pspi.*$/bash \/boot\/pspi\/boot.sh/g" /etc/rc.local >/dev/null
+        echo "fastboot is already in cmdline.txt"
 else
-        echo "Not Found, adding"
-        # Insert pspi into rc.local before final 'exit 0'
+        echo "adding fastboot to cmdline.txt"
         sed -i ' 1 s/.*/& fastboot/' /boot/cmdline.txt >/dev/null
 fi
 grep quiet /boot/cmdline.txt >/dev/null
 if [ $? -eq 0 ]; then
-        echo "Found"
-        # pspi already in rc.local, but make sure correct:
-        #sed -i "s/^.*pspi.*$/bash \/boot\/pspi\/boot.sh/g" /etc/rc.local >/dev/null
+        echo "quiet is already in cmdline.txt"
 else
-        echo "Not Found, adding"
-        # Insert pspi into rc.local before final 'exit 0'
+        echo "adding quiet to cmdline.txt"
         sed -i ' 1 s/.*/& quiet/' /boot/cmdline.txt >/dev/null
 fi
-
-
 
 #remove DHCP wait, for faster bootup
 rm -f /etc/systemd/system/dhcpcd.service.d/wait.conf 2>/dev/null
 sleep 1
-echo "Final Step --> select Interface Options, I2C, then enable I2C and reboot"
+echo "Enabling I2C"
+
+INTERACTIVE=False
+BLACKLIST=/etc/modprobe.d/raspi-blacklist.conf
+CONFIG=/boot/config.txt
+
+do_i2c() {
+    SETTING=on
+    STATUS=enabled
+
+#  set_config_var dtparam=i2c_arm $SETTING $CONFIG &&
+  if ! [ -e $BLACKLIST ]; then
+    touch $BLACKLIST
+  fi
+  sed $BLACKLIST -i -e "s/^\(blacklist[[:space:]]*i2c[-_]bcm2708\)/#\1/"
+  sed /etc/modules -i -e "s/^#[[:space:]]*\(i2c[-_]dev\)/\1/"
+  if ! grep -q "^i2c[-_]dev" /etc/modules; then
+    printf "i2c-dev\n" >> /etc/modules
+  fi
+  dtparam i2c_arm=$SETTING
+  modprobe i2c-dev
+}
+
+do_i2c
+
+echo "Rebooting"
 sleep 1
-read -r -p "Press enter to begin the final step..." key
-raspi-config
 reboot
