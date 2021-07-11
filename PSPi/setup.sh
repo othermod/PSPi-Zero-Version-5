@@ -12,17 +12,6 @@ killall pngview 2>/dev/null
 sleep 1
 echo "Copying files"
 
-# add boot script to rc.local
-grep pspi /etc/rc.local >/dev/null
-if [ $? -eq 0 ]; then
-#	echo "pspi already exists in rc.local. Re-creating."
-	# pspi already in rc.local, but make sure correct:
-	sed -i "s/^.*pspi.*$/bash \/boot\/pspi\/boot.sh/g" /etc/rc.local >/dev/null
-else
-#	echo "pspi doesn't exist in rc.local. Creating."
-	# Insert pspi into rc.local before final 'exit 0'
-	sed -i "s/^exit 0/bash \/boot\/pspi\/boot.sh\\nexit 0/g" /etc/rc.local >/dev/null
-fi
 
 # Make directory for driver and other files
 rm -r /home/pi/PSPi 2>/dev/null
@@ -68,7 +57,7 @@ else
         sed -i ' 1 s/.*/& quiet/' /boot/cmdline.txt >/dev/null
 fi
 
-#remove DHCP wait, for faster bootup
+# remove DHCP wait, for faster bootup
 rm -f /etc/systemd/system/dhcpcd.service.d/wait.conf 2>/dev/null
 sleep 1
 echo "Enabling I2C"
@@ -95,6 +84,16 @@ do_i2c() {
 }
 
 do_i2c
+
+# create services
+systemctl stop disablehdmi
+systemctl stop pspi_controller
+systemctl disable disablehdmi
+systemctl disable pspi_controller
+cp -f /boot/PSPi/Configs/disablehdmi.service /etc/systemd/system/disablehdmi.service
+cp -f /boot/PSPi/Configs/pspi_controller.service /etc/systemd/system/pspi_controller.service
+systemctl enable disablehdmi
+systemctl enable pspi_controller
 
 echo "Rebooting"
 sleep 1

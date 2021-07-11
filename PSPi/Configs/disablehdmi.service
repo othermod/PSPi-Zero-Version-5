@@ -1,0 +1,11 @@
+[Unit]
+Description=Disable Raspberry Pi HDMI port
+
+[Service]
+Type=oneshot
+ExecStart=/opt/vc/bin/tvservice -o
+ExecStop=/opt/vc/bin/tvservice -p
+RemainAfterExit=yes
+
+[Install]
+WantedBy=default.target
