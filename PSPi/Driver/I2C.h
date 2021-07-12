@@ -6,6 +6,7 @@
 #include <linux/i2c-dev.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 // return a file handler to the I2C device
 int openI2C(int deviceIdx);
