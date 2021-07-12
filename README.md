@@ -16,7 +16,7 @@ Boot the PSPi with the SD card inserted, with a USB keyboard attached.
 After Emulation Station loads, press F4 on the keyboard to exit to the command line.
 
 Type the following command to install everything:
-'''
+```
 sudo bash /boot/PSPi/setup.sh
-'''
+```
 The system will reboot after installation completes.
