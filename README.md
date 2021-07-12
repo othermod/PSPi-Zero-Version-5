@@ -1,13 +1,13 @@
 # PSPi Zero Version 5
 ![PSPi Zero](https://othermod.com/wp-content/uploads/IMG_8727.jpg)
  
-Option 1 - Installation Instructions Using Image
+**Option 1 - Installation Instructions Using Image**
 
 Download the ready-to-use image from Google Drive (link coming soon)
 
 Extract the image and use imaging software (such as Win32DiskImager or Etcher) to image your SD card
 
-Option 2 - Manual Offline Installation Instructions - 
+**Option 2 - Manual Offline Installation Instructions**
 
 Download repository, extract and copy all subfolders to the BOOT partition of a fresh RetroPie microSD (v4.7.1 currently). You must overwrite the original config.txt
 
