@@ -1,5 +1,5 @@
 pspi-controller: pspi-controller.c I2C.o JoystickDevice.o
-	gcc -o pspi-controller pspi-controller.c I2C.o JoystickDevice.o -lasound
+	gcc -O3 -o pspi-controller pspi-controller.c I2C.o JoystickDevice.o
 
 clean:
 	rm *.o
