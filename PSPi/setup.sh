@@ -86,14 +86,14 @@ do_i2c() {
 do_i2c
 
 # create services
-systemctl stop disablehdmi
-systemctl stop pspi_controller
-systemctl disable disablehdmi
-systemctl disable pspi_controller
+systemctl stop disablehdmi 2>/dev/null
+systemctl stop pspi_controller 2>/dev/null
+systemctl disable disablehdmi 2>/dev/null
+systemctl disable pspi_controller 2>/dev/null
 cp -f /boot/PSPi/Configs/disablehdmi.service /etc/systemd/system/disablehdmi.service
 cp -f /boot/PSPi/Configs/pspi_controller.service /etc/systemd/system/pspi_controller.service
-systemctl enable disablehdmi
-systemctl enable pspi_controller
+systemctl enable disablehdmi 2>/dev/null
+systemctl enable pspi_controller 2>/dev/null
 
 echo "Rebooting"
 sleep 1
