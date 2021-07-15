@@ -48,10 +48,10 @@ void updateUInputDevice(int UInputFIle, I2CJoystickStatus *newStatus, I2CJoystic
 //  TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x0F, BTN_4);
   // joystick axis
   uint8_t val = newStatus->axis0;
-  if (val > 117 & val < 137) {val = 127;}
+  if (val > 107 & val < 147) {val = 127;}
   if (val != status->axis0) {sendInputEvent(UInputFIle, EV_ABS, ABS_X, val);}
   val = newStatus->axis1;
-  if (val > 117 & val < 137) {val = 127;}
+  if (val > 107 & val < 147) {val = 127;}
   if (val != status->axis1) {sendInputEvent(UInputFIle, EV_ABS, ABS_Y, val);}
 }
 
