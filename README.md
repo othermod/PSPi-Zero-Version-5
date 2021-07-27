@@ -9,7 +9,9 @@ Extract the image and use imaging software (such as Win32DiskImager or Etcher) t
 
 ### Option 2 - Manual Offline Installation Instructions
 
-Download repository, extract and copy the PSPi folder and config.txt file to the BOOT partition of a fresh RetroPie microSD (v4.7.1 currently). You must overwrite the original config.txt
+Download repository, extract and copy the PSPi folder to the BOOT partition of a fresh RetroPie microSD (v4.7.1 currently). 
+
+Next, copy the appropriate config.txt file (from the 480x272 or 800x480 folder depending on which LCD you are using) to the BOOT partition. You must overwrite the original config.txt
 
 Boot the PSPi with the SD card inserted, with a USB keyboard attached.
 
