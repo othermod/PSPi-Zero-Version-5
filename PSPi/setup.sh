@@ -6,7 +6,7 @@ if [ $(id -u) -ne 0 ]; then
 	exit 1
 fi
 
-killall emulationstatio 2>/dev/null
+#killall emulationstatio 2>/dev/null
 killall pspi-controller 2>/dev/null
 killall pngview 2>/dev/null
 sleep 1
