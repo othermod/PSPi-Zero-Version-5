@@ -76,7 +76,7 @@ void startLog() {
 	FILE * fp;
 	fp = fopen ("log.csv","w");
 	fprintf (fp, "Line,rollingVoltage,amperageDifference,calculatedVoltage,indicationVoltage\n");
-	fclose(fp);	
+	fclose(fp);
 }
 
 void writeLog() {
@@ -100,10 +100,10 @@ void calculateBattery() {
 	if (indicationVoltage == 0) {indicationVoltage = calculatedVoltage;}
 	if (isCharging == 0) {
 		if (calculatedVoltage < indicationVoltage) { indicationVoltage--;}
-		if (amperageDifference < 10 || rollingVoltage > 4200) {isCharging = 1;}
+		if (amperageDifference < 0 || rollingVoltage > 4200) {isCharging = 1;}
 	} else {
 		if (calculatedVoltage > indicationVoltage) { indicationVoltage++;}
-		if (amperageDifference > 100) {isCharging = 0;}
+		if (amperageDifference > 50) {isCharging = 0;}
 	}
 	previousChargeStatus = chargeStatus;
 	chargeStatus = 0;
