@@ -83,7 +83,8 @@ void writeLog() {
 	FILE * fp;
 	fp = fopen ("log.csv","a");
 	line++;
-	fprintf (fp, "%d,%d,%d,%d,%d",line,rollingVoltage,amperageDifference,calculatedVoltage,indicationVoltage);
+	fprintf (fp, "%d,%d,%d,%d,%d\n",line,rollingVoltage,amperageDifference,calculatedVoltage,indicationVoltage);
+	printf ("%d,%d,%d,%d,%d\n",line,rollingVoltage,amperageDifference,calculatedVoltage,indicationVoltage);
 	fclose(fp);
 }
 
@@ -100,10 +101,10 @@ void calculateBattery() {
 	if (indicationVoltage == 0) {indicationVoltage = calculatedVoltage;}
 	if (isCharging == 0) {
 		if (calculatedVoltage < indicationVoltage) { indicationVoltage--;}
-		if (amperageDifference < 0 || rollingVoltage > 4200) {isCharging = 1;}
+		if (amperageDifference < -25 || rollingVoltage > 4200) {isCharging = 1;}
 	} else {
 		if (calculatedVoltage > indicationVoltage) { indicationVoltage++;}
-		if (amperageDifference > 50) {isCharging = 0;}
+		if (amperageDifference > 25) {isCharging = 0;}
 	}
 	previousChargeStatus = chargeStatus;
 	chargeStatus = 0;
@@ -149,7 +150,8 @@ int main(int argc, char *argv[]) {
     		fgets(buf, 4, f);
 	}
 	fscanf(f, "%d", &resolution);
-
+//	startLog();
+//	int count = 0;
 	while(1) {
 	    I2CJoystickStatus newStatus; // read new status from I2C
 		if(readI2CJoystick(I2CFile, &newStatus) != 0) {
@@ -164,6 +166,12 @@ int main(int argc, char *argv[]) {
 		previousIsMute = isMute;
 		isMute = (status.buttons >> 0x0F) & 1;
 		calculateBattery();
+//		count++;
+//		if (count == 60)
+//			{
+//			count = 0;
+//			writeLog();
+//			}
 		usleep(UPDATE_FREQ);
 	}
 
