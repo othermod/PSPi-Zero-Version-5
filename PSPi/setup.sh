@@ -95,6 +95,10 @@ cp -f /boot/PSPi/Configs/pspi_controller.service /etc/systemd/system/pspi_contro
 systemctl enable disablehdmi 2>/dev/null
 systemctl enable pspi_controller 2>/dev/null
 
+# fix file permissions
+chmod 0755 /home/pi/PSPi/Driver/pspi-controller
+chmod 0755 /home/pi/PSPi/Driver/pngview
+
 echo "Rebooting"
 sleep 1
 reboot
