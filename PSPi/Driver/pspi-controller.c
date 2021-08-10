@@ -2,8 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "I2C.h"
-#include "JoystickDevice.h"
+#include <linux/i2c-dev.h>
+#include <sys/ioctl.h>
+#include <fcntl.h>
+#include <linux/input.h>
+#include <linux/uinput.h>
+#include <string.h>
+#include <stdint.h>
 
 #define I2C_GAMEPAD_ADDRESS 0x18
 #define UPDATE_FREQ 1000000/60 // ms (60Hz)
@@ -24,6 +29,122 @@ int calculatedVoltage = 0;
 int resolution;
 uint16_t rawVolt;
 uint16_t rawAmp;
+
+int openI2C() { 
+  int file;
+  char filename[2048];
+//specify which I2C bus to use
+  sprintf(filename, "/dev/i2c-1");
+
+  if ((file = open(filename, O_RDWR)) < 0) {
+    /* ERROR HANDLING: you can check errno to see what went wrong */
+    fprintf(stderr, "Failed to open the i2c bus");
+    exit(1);
+  }
+  return file;
+}
+
+int readI2CSlave(int file, int slaveAddress, void *buf, size_t count) {
+  // initialize communication
+  if (ioctl(file, I2C_SLAVE, slaveAddress) < 0) {
+    fprintf(stderr, "I2C: Failed to acquire bus access/talk to slave 0x%x\n", slaveAddress);
+    return 0;
+  }
+  int s = 0;  
+  s = read(file, buf, count);
+  return s; // no error
+}
+
+int createUInputDevice() {
+  int fd;
+
+  fd = open("/dev/uinput", O_WRONLY | O_NDELAY);
+  if(fd < 0) {
+    fprintf(stderr, "Can't open uinput device!\n");
+    exit(1);
+  }
+  
+    // device structure
+  struct uinput_user_dev uidev;
+  memset(&uidev, 0, sizeof(uidev));
+
+  // init event  
+  int ret = 0;
+  ret |= ioctl(fd, UI_SET_EVBIT, EV_KEY);
+  ret |= ioctl(fd, UI_SET_EVBIT, EV_REL);
+
+  // button
+  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_A);
+  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_B);
+  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_X);
+  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_Y);
+  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_TL);
+  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_TR);
+  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_SELECT);
+  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_START);
+  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_DPAD_UP);
+  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_DPAD_DOWN);
+  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_DPAD_LEFT);
+  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_DPAD_RIGHT);
+  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_1);
+//  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_2);
+//  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_3);
+//  ret |= ioctl(fd, UI_SET_KEYBIT, BTN_4);
+
+
+  // axis
+  ret |= ioctl(fd, UI_SET_EVBIT, EV_ABS);
+  ret |= ioctl(fd, UI_SET_ABSBIT, ABS_X);
+  uidev.absmin[ABS_X] = 55;
+  uidev.absmax[ABS_X] = 200;
+  
+  ret |= ioctl(fd, UI_SET_ABSBIT, ABS_Y);
+  uidev.absmin[ABS_Y] = 55;
+  uidev.absmax[ABS_Y] = 200;
+
+  
+  if(ret) {
+    fprintf(stderr, "Error while configuring uinput device!\n");
+    exit(1);
+  }
+
+  snprintf(uidev.name, UINPUT_MAX_NAME_SIZE, "PSPi Controller");
+  uidev.id.bustype = BUS_USB;
+  uidev.id.vendor  = 1;
+  uidev.id.product = 5;
+  uidev.id.version = 1;
+
+  ret = write(fd, &uidev, sizeof(uidev));
+  if(ioctl(fd, UI_DEV_CREATE)) {
+    fprintf(stderr, "Error while creating uinput device!\n");
+    exit(1);    
+  }
+
+  return fd;
+}
+
+void sendInputEvent(int fd, uint16_t type, uint16_t code, int32_t value) {
+  struct input_event ev;
+
+  memset(&ev, 0, sizeof(ev));
+
+  ev.type = type;
+  ev.code = code;
+  ev.value = value;
+  
+  if(write(fd, &ev, sizeof(ev)) < 0) {
+    fprintf(stderr, "Error while sending event to uinput device!\n");
+  }
+
+  // need to send a sync event
+  ev.type = EV_SYN;
+  ev.code = SYN_REPORT;
+  ev.value = 0;
+  write(fd, &ev, sizeof(ev));
+  if (write(fd, &ev, sizeof(ev)) < 0) {
+    fprintf(stderr, "Error while sending event to uinput device!\n");
+  }
+}
 
 typedef struct {
 	uint16_t buttons; // button status
@@ -128,7 +249,7 @@ void calculateBattery() {
 }
 
 int main(int argc, char *argv[]) {
-	int I2CFile = openI2C(1); // open I2C device
+	int I2CFile = openI2C(); // open I2C device
 	I2CJoystickStatus status; // current joystick status
 	status.buttons = 0;
 	status.axis0 = 0;
