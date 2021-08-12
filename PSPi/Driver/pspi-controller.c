@@ -8,6 +8,7 @@
 #include <linux/uinput.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #define I2C_GAMEPAD_ADDRESS 0x18
 #define REFRESH_RATE 60 // refresh rate in Hz
@@ -15,20 +16,29 @@
 
 const int magicNumber = 17; // Number that corrects for internal resistance on LiPo battery
 const int rolling = 64; // Number of readings being averaged together. This has to match the atmega variable
-_Bool isCharging = 0;
-_Bool previousIsCharging = 0;
-_Bool isMute = 0;
-_Bool previousIsMute = 0;
-int line = 0;
+bool isCharging = 0;
+bool previousIsCharging = 0;
+bool isMute = 0;
+bool previousIsMute = 0;
 int chargeStatus = 11;
 int previousChargeStatus = 0;
 int indicationVoltage = 0;
 int rollingVoltage = 0;
 int amperageDifference = 0;
 int calculatedVoltage = 0;
-int resolution;
 uint16_t rawVolt;
 uint16_t rawAmp;
+
+int readResolution() {
+	FILE *f = fopen("pspi.cfg","r"); // stores horizontal resolution to variable so this works with both LCD types
+	char buf[4];
+	for (int i = 0 ; i != 0 ; i++) {
+    		fgets(buf, 4, f);
+	}
+	int result;
+	fscanf(f, "%d", &result); // would be better to grab it directly, but I'll have to work out the method
+	return result;
+}
 
 int openI2C() { 
 	int file;
@@ -168,19 +178,18 @@ void updateButtons(int UInputFIle, I2CJoystickStatus *newStatus, I2CJoystickStat
 void startLog() {
 	FILE * fp;
 	fp = fopen ("log.csv","w");
-	fprintf (fp, "Line,rollingVoltage,amperageDifference,calculatedVoltage,indicationVoltage\n");
+	fprintf (fp, "rollingVoltage,amperageDifference,calculatedVoltage,indicationVoltage\n");
 	fclose(fp);
 }
 
 void writeLog() {
 	FILE * fp;
 	fp = fopen ("log.csv","a");
-	line++;
-	fprintf (fp, "%d,%d,%d,%d,%d\n",line,rollingVoltage,amperageDifference,calculatedVoltage,indicationVoltage);
+	fprintf (fp, "%d,%d,%d,%d,%d\n",rollingVoltage,amperageDifference,calculatedVoltage,indicationVoltage);
 	fclose(fp);
 }
 
-void calculateBattery() {
+void calculateBattery(int position) {
 	// a lot of this math is just converting the raw values to readable voltage
 	// test efficiency to see whether it is worth working with raw values instead
 	rollingVoltage = rawVolt * 11 * 3300 / 1024 / rolling;
@@ -210,7 +219,7 @@ void calculateBattery() {
 	if ((previousChargeStatus != chargeStatus) || (previousIsCharging != isCharging) || (previousIsMute != isMute)) { // Change Battery Status
 		char temp[512];
 		system ("sudo killall pngview 2>/dev/null");
-		sprintf(temp, "/home/pi/PSPi/Driver/./pngview -n -b 0 -l 100000 -x %d -y 2 /home/pi/PSPi/Driver/PNG/battery%d%d%d.png &",resolution - 46,isMute,isCharging,chargeStatus);
+		sprintf(temp, "/home/pi/PSPi/Driver/./pngview -n -b 0 -l 100000 -x %d -y 2 /home/pi/PSPi/Driver/PNG/battery%d%d%d.png &",position - 46,isMute,isCharging,chargeStatus);
 		system((char *)temp);
 	}
 }
@@ -229,16 +238,9 @@ int main(int argc, char *argv[]) {
 		sleep(1);
     }
 	sleep(1);
-	FILE *f = fopen("pspi.cfg","r");		// stores horizontal resolution to variable 
-	int i;									// so this works with both LCD types
-	char buf[4];							// would be better to grab it directly,
-	for (i = 0 ; i != 0 ; i++) {			// but I'll have to work out the method
-    		fgets(buf, 4, f);				//
-	}										//
-	fscanf(f, "%d", &resolution);			//
-//	startLog();
-//	int count = 0;
-	printf("Frequency is %d\n", UPDATE_FREQ);
+	int resolution = readResolution();
+	//startLog();
+	//int count = 0;
 	while(1) {
 	    I2CJoystickStatus newStatus; // read new status from I2C
 		if(readI2CJoystick(I2CFile, &newStatus) != 0) {
@@ -252,13 +254,12 @@ int main(int argc, char *argv[]) {
 		rawAmp = status.amperage;
 		previousIsMute = isMute;
 		isMute = (status.buttons >> 0x0F) & 1;
-		calculateBattery();
-//		count++;
-//		if (count == 60)
-//			{
-//			count = 0;
-//			writeLog();
-//			}
+		calculateBattery(resolution);
+		//count++;
+		//if (count == 60) {
+			//count = 0;
+			//writeLog();
+		//}
 		usleep(UPDATE_FREQ);
 	}
 	close(I2CFile); // close file
