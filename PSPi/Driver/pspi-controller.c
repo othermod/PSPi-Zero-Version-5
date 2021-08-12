@@ -10,10 +10,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define I2C_GAMEPAD_ADDRESS 0x18
+#define I2C_ADDRESS 0x18
 #define REFRESH_RATE 60 // refresh rate in Hz
-#define UPDATE_FREQ 1000000/REFRESH_RATE
 
+const int sleepTime = 1000000/REFRESH_RATE;
 const int magicNumber = 17; // Number that corrects for internal resistance on LiPo battery
 const int rolling = 64; // Number of readings being averaged together. This has to match the atmega variable
 bool isCharging = 0;
@@ -95,11 +95,15 @@ int createUInputDevice() {
 	// axis
 	ret |= ioctl(fd, UI_SET_EVBIT, EV_ABS);
 	ret |= ioctl(fd, UI_SET_ABSBIT, ABS_X);
-	uidev.absmin[ABS_X] = 55;
-	uidev.absmax[ABS_X] = 200;
+	uidev.absmin[ABS_X] = 55; //center position is 127, minimum is near 50
+	uidev.absmax[ABS_X] = 200; //center position is 127, maximum is near 200
+	uidev.absflat[ABS_X] = 20; //this appears to be the deadzone
+	//uidev.absfuzz[ABS_X] = 0; //what does this do?
 	ret |= ioctl(fd, UI_SET_ABSBIT, ABS_Y);
-	uidev.absmin[ABS_Y] = 55;
-	uidev.absmax[ABS_Y] = 200;
+	uidev.absmin[ABS_Y] = 55; //center position is 127, minimum is near 50
+	uidev.absmax[ABS_Y] = 200; //center position is 127, maximum is near 200
+	uidev.absflat[ABS_Y] = 20; //this appears to be the deadzone
+	//uidev.absfuzz[ABS_Y] = 0; //what does this do?
 	if(ret) {
 		fprintf(stderr, "Error while configuring uinput device!\n");
 		exit(1);
@@ -141,7 +145,7 @@ typedef struct {
 } I2CJoystickStatus;
 
 int readI2CJoystick(int file, I2CJoystickStatus *status) {
-	int s = readI2CSlave(file, I2C_GAMEPAD_ADDRESS, status, sizeof(I2CJoystickStatus));
+	int s = readI2CSlave(file, I2C_ADDRESS, status, sizeof(I2CJoystickStatus));
 	if(s != sizeof(I2CJoystickStatus))
 		return -1; // error
 	return 0; // no error
@@ -168,10 +172,8 @@ void updateButtons(int UInputFIle, I2CJoystickStatus *newStatus, I2CJoystickStat
 	//TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x0E, BTN_3);
 	//TestBitAndSendKeyEvent(status->buttons, newStatus->buttons, 0x0F, BTN_4);
 	uint8_t joystickValue = newStatus->axis0;
-	if (joystickValue > 107 & joystickValue < 147) {joystickValue = 127;}
 	if (joystickValue != status->axis0) {sendInputEvent(UInputFIle, EV_ABS, ABS_X, joystickValue);}
 	joystickValue = newStatus->axis1;
-	if (joystickValue > 107 & joystickValue < 147) {joystickValue = 127;}
 	if (joystickValue != status->axis1) {sendInputEvent(UInputFIle, EV_ABS, ABS_Y, joystickValue);}
 }
 
@@ -260,7 +262,7 @@ int main(int argc, char *argv[]) {
 			//count = 0;
 			//writeLog();
 		//}
-		usleep(UPDATE_FREQ);
+		usleep(sleepTime);
 	}
 	close(I2CFile); // close file
 	ioctl(UInputFIle, UI_DEV_DESTROY);
