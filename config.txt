@@ -34,6 +34,7 @@ gpio=9=a2,np
 #GPIO 10 is available for use
 dtoverlay=gpio-shutdown,gpio_pin=10,debounce=500
 #GPIO 11 is available for use
+gpio=11=ip,pu
 gpio=12=a2,np
 gpio=13=a2,np
 gpio=14=a2,np
@@ -50,15 +51,6 @@ gpio=25=a2,np
 gpio=26=ip,pu
 dtoverlay=gpio-poweroff,active_low="y"
 dtparam=act_led_gpio=27
-
 dtparam=act_led_activelow=yes
 
-#Configure DPI signal
-framebuffer_width=800
-framebuffer_height=480
-enable_dpi_lcd=1
-display_default_lcd=1
-dpi_group=2
-dpi_mode=87
-dpi_output_format=503846
-dpi_timings=800 0 40 48 88 480 0 13 3 32 0 0 0 60 0 32000000 6
+include lcd.txt
