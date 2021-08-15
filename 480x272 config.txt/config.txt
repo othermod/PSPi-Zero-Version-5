@@ -32,7 +32,7 @@ gpio=7=a2,np
 gpio=8=a2,np
 gpio=9=a2,np
 #GPIO 10 is available for use
-dtoverlay=gpio-shutdown,gpio_pin=10
+dtoverlay=gpio-shutdown,gpio_pin=10,debounce=500
 #GPIO 11 is available for use
 gpio=12=a2,np
 gpio=13=a2,np
