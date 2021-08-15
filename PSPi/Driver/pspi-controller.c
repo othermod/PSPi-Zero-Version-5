@@ -12,6 +12,10 @@
 
 #define I2C_ADDRESS 0x18
 #define REFRESH_RATE 60 // refresh rate in Hz
+#define HIGH 1
+#define LOW 0
+#define INPUT 1
+#define OUTPUT 0
 
 const int sleepTime = 1000000/REFRESH_RATE;
 const int magicNumber = 17; // Number that corrects for internal resistance on LiPo battery
@@ -29,6 +33,77 @@ int calculatedVoltage = 0;
 uint16_t rawVolt;
 uint16_t rawAmp;
 
+bool digitalPinMode(int pin, int dir){
+  FILE * fd;
+  char fName[128];
+  // Exporting the pin to be used
+  if(( fd = fopen("/sys/class/gpio/export", "w")) == NULL) {
+    printf("Error: unable to export pin\n");
+    return false;
+  }
+  fprintf(fd, "%d\n", pin);
+  fclose(fd);
+  // Setting direction of the pin
+  sprintf(fName, "/sys/class/gpio/gpio%d/direction", pin);
+  if((fd = fopen(fName, "w")) == NULL) {
+    printf("Error: can't open pin direction\n");
+    return false;
+  }
+  if(dir == OUTPUT) {fprintf(fd, "out\n");} 
+	else { fprintf(fd, "in\n");}
+  fclose(fd);
+  return true;
+}
+
+int digitalRead(int pin) {
+  FILE * fd;
+  char fName[128];
+  char val[2];
+  // Open pin value file
+  sprintf(fName, "/sys/class/gpio/gpio%d/value", pin);
+  if((fd = fopen(fName, "r")) == NULL) {
+    printf("Error: can't open pin value\n");
+    return false;
+  }
+  fgets(val, 2, fd);
+  fclose(fd);
+  return atoi(val);
+}
+
+void sleepMode(int gpio, int file) {
+	//printf("Sleep Mode\n");
+	system("sudo killall -TSTP retroarch 2>/dev/null");
+	system("sudo killall -TSTP emulationstatio 2>/dev/null");
+	char buf[1] = {0};
+	buf[0] = 0; //LCD off
+	if (write(file,buf,1) != 1) {
+			/* ERROR HANDLING: i2c transaction failed */
+			printf("Failed to write to the i2c bus.\n");
+		}
+	while (!digitalRead(gpio)) { //stay in this loop while the hold switch is down
+		buf[0] = 4; //orange led on
+		if (write(file,buf,1) != 1) {
+			/* ERROR HANDLING: i2c transaction failed */
+			printf("Failed to write to the i2c bus.\n");
+		}
+		sleep(2);
+		buf[0] = 5; //orange led off
+		if (write(file,buf,1) != 1) {
+			/* ERROR HANDLING: i2c transaction failed */
+			printf("Failed to write to the i2c bus.\n");
+		}
+		sleep(2);
+	}
+	system("sudo killall -CONT retroarch 2>/dev/null");
+	system("sudo killall -CONT emulationstatio 2>/dev/null");
+	buf[0] = 1; //LCD on
+	if (write(file,buf,1) != 1) {
+			/* ERROR HANDLING: i2c transaction failed */
+			printf("Failed to write to the i2c bus.\n");
+		}
+	//printf("Normal Mode\n");
+}
+
 int readResolution() {
 	FILE *f = fopen("pspi.cfg","r"); // stores horizontal resolution to variable so this works with both LCD types
 	char buf[4];
@@ -42,8 +117,9 @@ int readResolution() {
 
 int openI2C() { 
 	int file;
-	char filename[2048];
-	sprintf(filename, "/dev/i2c-1"); //specify which I2C bus to use
+	char *filename = "/dev/i2c-1"; //specify which I2C bus to use
+	//char filename[2048]; //this was the old method
+	//sprintf(filename, "/dev/i2c-1");
 	if ((file = open(filename, O_RDWR)) < 0) {
 		fprintf(stderr, "Failed to open the i2c bus"); /* ERROR HANDLING: you can check errno to see what went wrong */
 		exit(1);
@@ -241,8 +317,10 @@ int main(int argc, char *argv[]) {
     }
 	sleep(1);
 	int resolution = readResolution();
+	int gpio = 11;
+	digitalPinMode(gpio, INPUT);
 	//startLog();
-	//int count = 0;
+	int count = 0;
 	while(1) {
 	    I2CJoystickStatus newStatus; // read new status from I2C
 		if(readI2CJoystick(I2CFile, &newStatus) != 0) {
@@ -257,11 +335,14 @@ int main(int argc, char *argv[]) {
 		previousIsMute = isMute;
 		isMute = (status.buttons >> 0x0F) & 1;
 		calculateBattery(resolution);
-		//count++;
-		//if (count == 60) {
-			//count = 0;
+		count++;
+		if (count == 60) {
+			count = 0;
 			//writeLog();
-		//}
+			if (!digitalRead(gpio)) {
+				sleepMode(gpio, I2CFile);
+			}
+		}
 		usleep(sleepTime);
 	}
 	close(I2CFile); // close file

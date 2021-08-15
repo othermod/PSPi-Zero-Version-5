@@ -4,4 +4,3 @@ cat /sys/class/graphics/fb0/virtual_size | cut -d, -f1 > pspi.cfg
 
 # start driver
 sudo ./pspi-controller &
-sudo python pause.py &
