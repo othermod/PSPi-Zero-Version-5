@@ -23,7 +23,7 @@ if (ioctl(file, I2C_SLAVE, addr) < 0) {
 	exit(1);
 }
 
-char buf[10] = {0};
+char buf[1] = {0};
 while(1) {
 	buf[0] = 4; //led on
 	if (write(file,buf,1) != 1) {
