@@ -72,12 +72,14 @@ int digitalRead(int pin) {
 
 void sleepMode(int gpio, int file, int resolution) {
 	//printf("Sleep Mode\n");
-	system("sudo killall -TSTP retroarch 2>/dev/null");
-	system("sudo killall -TSTP emulationstatio 2>/dev/null");
 	char temp[512];
+	system("sudo killall pngview 2> /dev/null");
 	sprintf(temp, "/home/pi/PSPi/Driver/./pngview -n -b 0 -l 100000 sleep%d.png &",resolution);
 	system((char *)temp);
-	sleep(2);
+	sleep(1);
+	system("sudo killall -TSTP retroarch 2>/dev/null");
+	sleep(1);
+	system("sudo killall -TSTP emulationstatio 2>/dev/null");
 	char buf[1] = {0};
 	buf[0] = 0; //LCD off
 	if (write(file,buf,1) != 1) {
@@ -87,17 +89,15 @@ void sleepMode(int gpio, int file, int resolution) {
 	sleep(1);
 	system("sudo killall pngview 2> /dev/null");
 	while (!digitalRead(gpio)) { //stay in this loop while the hold switch is down
-		buf[0] = 4; //orange led on
+		/*buf[0] = 4; //orange led on
 		if (write(file,buf,1) != 1) {
-			/* ERROR HANDLING: i2c transaction failed */
 			printf("Failed to write to the i2c bus.\n");
 		}
 		sleep(2);
 		buf[0] = 5; //orange led off
 		if (write(file,buf,1) != 1) {
-			/* ERROR HANDLING: i2c transaction failed */
 			printf("Failed to write to the i2c bus.\n");
-		}
+		}*/
 		sleep(2);
 	}
 	system("sudo killall -CONT retroarch 2>/dev/null");
