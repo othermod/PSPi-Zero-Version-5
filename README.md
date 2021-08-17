@@ -3,9 +3,9 @@
  
 ### Option 1 - Installation Instructions Using Image
 
-Download the ready-to-use image from Google Drive (link coming soon)
+Download the ready-to-use image from [Google Drive(](https://drive.google.com/file/d/1LdgOSTCEvPwvksIEMmHCxauEN8INBU-z/view?usp=sharing) or [Torrent Magnet Link(](magnet:?xt=urn:btih:a9f6d58c56663d980b317419adf9a53b9920c7f7&dn=PSPi%20Zero%20v5%208.17.21.7z&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2ftracker.openbittorrent.com%3a1337%2fannounce)
 
-Extract the image and use imaging software (such as Win32DiskImager or Etcher) to image your SD card
+Extract the image and use imaging software (such as Win32DiskImager, Etcher, or Raspberry Pi Imager) to image your SD card
 
 ### Option 2 - Manual Offline Installation Instructions
 
