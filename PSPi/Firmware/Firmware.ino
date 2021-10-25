@@ -220,10 +220,10 @@ void requestEvent() {
 
 void receiveEvent(int numBytes) {
   uint8_t receivedData = Wire.read();
-  if (receivedData == 0)
+  if (receivedData == 0) // enter sleep mode
     analogWrite(PWM_PIN, 0);
   if (receivedData == 1)
-    analogWrite(PWM_PIN, PWMarray[PWMposition]);
+    analogWrite(PWM_PIN, PWMarray[PWMposition]); // return from sleep mode
   if (receivedData == 2)
     digitalWrite(MUTE_PIN, 0);
   if (receivedData == 3)
