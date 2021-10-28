@@ -1,5 +1,5 @@
-cd /home/pi/PSPi/Driver
-# check resolution asudo tvservice -o
+# disable HDMI to save power
+sudo tvservice -o
 
 cd /home/pi/PSPi/Driver
 # check resolution and create config file
