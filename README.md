@@ -1,9 +1,9 @@
 # PSPi Zero Version 5
 ![PSPi Zero](https://othermod.com/wp-content/uploads/IMG_8727.jpg)
- 
+
 ### Option 1 - Installation Instructions Using Image
 
-Download the ready-to-use image from [Google Drive](https://drive.google.com/file/d/1LdgOSTCEvPwvksIEMmHCxauEN8INBU-z/view?usp=sharing) or [Torrent](https://othermod.com/wp-content/uploads/PSPi-Zero-v5-8.17.21.7z.torrent)
+Download the ready-to-use image from [Google Drive](https://drive.google.com/file/d/1LdgOSTCEvPwvksIEMmHCxauEN8INBU-z/view?usp=sharing) or [Download at othermod.com](https://othermod.com/downloads/)
 
 Extract the image and use imaging software (such as Win32DiskImager, Etcher, or Raspberry Pi Imager) to image your SD card
 
@@ -22,4 +22,3 @@ Type the following command to install everything:
 sudo bash /boot/PSPi/setup.sh
 ```
 The system will reboot after installation completes.
-
