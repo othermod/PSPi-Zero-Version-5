@@ -393,8 +393,8 @@ int main(int argc, char * argv[]) {
       printf("Controller is not detected on the I2C bus.\n");
       sleep(1);
     } else { // everything is ok
-      int xcenter = 123;
-      int ycenter = 131;
+      int xcenter = 127; // add a calibration procedure
+      int ycenter = 127;
 
       if (mouseEnabled) {
         emit(virtualMouse, EV_REL, REL_X, (currentReading.axis0 - xcenter) / 8);
