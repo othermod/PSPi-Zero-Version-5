@@ -453,7 +453,7 @@ int main(int argc, char * argv[]) {
       batteryData.isCharging = 0;
     }
 
-    int temp = batteryData.rawVoltage + batteryData.amperage / 2.5;
+    int temp = batteryData.rawVoltage + batteryData.amperage / 2.5; // put more work into this, to better calculate internal resistance of the battery
     if (firstLoop) { //set the initial (specifically correctedVoltage) battery condition
       batteryData.correctedVoltage = temp;
       firstLoop = 0;
