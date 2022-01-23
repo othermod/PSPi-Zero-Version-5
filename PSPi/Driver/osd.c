@@ -367,6 +367,7 @@ int main(int argc, char * argv[]) {
     ioctl(virtualGamepad, UI_SET_KEYBIT, BTN_DPAD_LEFT);
     ioctl(virtualGamepad, UI_SET_KEYBIT, BTN_DPAD_RIGHT);
     ioctl(virtualGamepad, UI_SET_KEYBIT, BTN_1);
+    ioctl(virtualGamepad, UI_SET_KEYBIT, BTN_2);
     if (joystickEnabled) {
       ioctl(virtualGamepad, UI_SET_EVBIT, EV_ABS);
       ioctl(virtualGamepad, UI_SET_ABSBIT, ABS_X);
@@ -425,7 +426,8 @@ int main(int argc, char * argv[]) {
           emit(virtualGamepad, EV_KEY, BTN_DPAD_DOWN, BTN_DPAD_DOWN_BIT_READING);
           emit(virtualGamepad, EV_KEY, BTN_DPAD_LEFT, BTN_DPAD_LEFT_BIT_READING);
           emit(virtualGamepad, EV_KEY, BTN_DPAD_RIGHT, BTN_DPAD_RIGHT_BIT_READING);
-          emit(virtualGamepad, EV_KEY, BTN_1, BTN_HOME_BIT_READING ^ (BTN_START_BIT_READING & BTN_SELECT_BIT_READING));
+          emit(virtualGamepad, EV_KEY, BTN_1, BTN_HOME_BIT_READING);
+          emit(virtualGamepad, EV_KEY, BTN_2, BTN_SELECT_BIT_READING|BTN_HOME_BIT_READING); // this is the virtual Hotkey button. Select and Home trigger it
         }
         if (joystickEnabled) {
           if (currentReading.axis0!=previousReading.axis0) { //only update if something changed since previous loop
