@@ -48,6 +48,7 @@
 bool reportingEnabled = 0;
 bool gamepadEnabled = 0;
 bool mouseEnabled = 0;
+bool joystickEnabled = 0;
 bool textOSD = 0;
 bool isMute = 0;
 bool firstLoop = 1;
@@ -260,6 +261,9 @@ int main(int argc, char * argv[]) {
         if (!strcmp("-gamepad", argv[ctr])) {
          gamepadEnabled = 1;
         }
+        if (!strcmp("-joystick", argv[ctr])) {
+         joystickEnabled = 1;
+        }
         if (!strcmp("-mouse", argv[ctr])) {
           mouseEnabled = 1;
          }
@@ -363,16 +367,19 @@ int main(int argc, char * argv[]) {
     ioctl(virtualGamepad, UI_SET_KEYBIT, BTN_DPAD_LEFT);
     ioctl(virtualGamepad, UI_SET_KEYBIT, BTN_DPAD_RIGHT);
     ioctl(virtualGamepad, UI_SET_KEYBIT, BTN_1);
-    ioctl(virtualGamepad, UI_SET_EVBIT, EV_ABS);
-    ioctl(virtualGamepad, UI_SET_ABSBIT, ABS_X);
-    uidev.absmin[ABS_X] = 55; //center position is 127, minimum is near 50
-    uidev.absmax[ABS_X] = 200; //center position is 127, maximum is near 200
-    uidev.absflat[ABS_X] = 20; //this appears to be the deadzone
-    //uidev.absfuzz[ABS_X] = 0; //what does this do?
-    ioctl(virtualGamepad, UI_SET_ABSBIT, ABS_Y);
-    uidev.absmin[ABS_Y] = 55; //center position is 127, minimum is near 50
-    uidev.absmax[ABS_Y] = 200; //center position is 127, maximum is near 200
-    uidev.absflat[ABS_Y] = 20; //this appears to be the deadzone
+    if (joystickEnabled) {
+      ioctl(virtualGamepad, UI_SET_EVBIT, EV_ABS);
+      ioctl(virtualGamepad, UI_SET_ABSBIT, ABS_X);
+      uidev.absmin[ABS_X] = 55; //center position is 127, minimum is near 50
+      uidev.absmax[ABS_X] = 200; //center position is 127, maximum is near 200
+      uidev.absflat[ABS_X] = 20; //this appears to be the deadzone
+      //uidev.absfuzz[ABS_X] = 0; //what does this do?
+      ioctl(virtualGamepad, UI_SET_ABSBIT, ABS_Y);
+      uidev.absmin[ABS_Y] = 55; //center position is 127, minimum is near 50
+      uidev.absmax[ABS_Y] = 200; //center position is 127, maximum is near 200
+      uidev.absflat[ABS_Y] = 20; //this appears to be the deadzone
+    }
+
     snprintf(uidev.name, UINPUT_MAX_NAME_SIZE, "PSPi Controller");
     uidev.id.bustype = BUS_USB;
     uidev.id.vendor = 1;
@@ -409,7 +416,7 @@ int main(int argc, char * argv[]) {
           emit(virtualGamepad, EV_KEY, BTN_EAST, BTN_EAST_BIT_READING);
           emit(virtualGamepad, EV_KEY, BTN_SOUTH, BTN_SOUTH_BIT_READING);
           emit(virtualGamepad, EV_KEY, BTN_NORTH, BTN_NORTH_BIT_READING);
-          emit(virtualGamepad, EV_KEY, BTN_WEST, BTN_NORTH_BIT_READING);
+          emit(virtualGamepad, EV_KEY, BTN_WEST, BTN_WEST_BIT_READING);
           emit(virtualGamepad, EV_KEY, BTN_TL, BTN_TL_BIT_READING);
           emit(virtualGamepad, EV_KEY, BTN_TR, BTN_TR_BIT_READING);
           emit(virtualGamepad, EV_KEY, BTN_SELECT, BTN_SELECT_BIT_READING);
@@ -420,18 +427,20 @@ int main(int argc, char * argv[]) {
           emit(virtualGamepad, EV_KEY, BTN_DPAD_RIGHT, BTN_DPAD_RIGHT_BIT_READING);
           emit(virtualGamepad, EV_KEY, BTN_1, BTN_HOME_BIT_READING ^ (BTN_START_BIT_READING & BTN_SELECT_BIT_READING));
         }
-        if (currentReading.axis0!=previousReading.axis0) { //only update if something changed since previous loop
-          emit(virtualGamepad, EV_ABS, ABS_X, currentReading.axis0); // should this happen when nothing was changed?
-        }
-        if (currentReading.axis1!=previousReading.axis1) { //only update if something changed since previous loop
-          emit(virtualGamepad, EV_ABS, ABS_Y, currentReading.axis1);
+        if (joystickEnabled) {
+          if (currentReading.axis0!=previousReading.axis0) { //only update if something changed since previous loop
+            emit(virtualGamepad, EV_ABS, ABS_X, currentReading.axis0); // should this happen when nothing was changed?
+          }
+          if (currentReading.axis1!=previousReading.axis1) { //only update if something changed since previous loop
+            emit(virtualGamepad, EV_ABS, ABS_Y, currentReading.axis1);
+          }
         }
         emit(virtualGamepad, EV_SYN, SYN_REPORT, 0);
       }
 
       if (BTN_TL_BIT_READING & BTN_TR_BIT_READING) {
         countOSD++;
-        if (countOSD == 100) {
+        if (countOSD == 100) { // if trigger buttons were held for 100 cycles, enable/disable the text OSD
           textOSD = !textOSD;
           textDelay = 0;
           clearLayer( & infoLayer);
@@ -474,7 +483,7 @@ int main(int argc, char * argv[]) {
 
     if (!countGPIO) { // check the GPIO pin every 128 loops
       readGPIO();
-      if (!(( *gpioStatus >> 0x00) & 1)){
+      if (!(( *gpioStatus >> 0x00) & 1)){ //if the GPIO is low, enter sleep mode
         //sleepMode();
       }
     }
