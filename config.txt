@@ -32,8 +32,8 @@ gpio=7=a2,np
 gpio=8=a2,np
 gpio=9=a2,np
 #GPIO 10 is available for use
-dtoverlay=gpio-shutdown,gpio_pin=10,debounce=500
-#GPIO 11 is available for use
+dtoverlay=gpio-shutdown,gpio_pin=10,debounce=250
+#GPIO 11 is the Hold switch
 gpio=11=ip,pu
 gpio=12=a2,np
 gpio=13=a2,np
@@ -48,8 +48,10 @@ gpio=22=a2,np
 gpio=23=a2,np
 gpio=24=a2,np
 gpio=25=a2,np
+#GPIO 26 powers the board off after shutdown
 gpio=26=ip,pu
 dtoverlay=gpio-poweroff,active_low="y"
+#GPIO 27 is the activity LED
 dtparam=act_led_gpio=27
 dtparam=act_led_activelow=yes
 
