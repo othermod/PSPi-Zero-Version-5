@@ -231,7 +231,7 @@ void readGPIO(){
 }
 
 void sleepMode(){
-  system("sudo bash sleep.sh >/dev/null &");
+  system("sudo bash sleep.sh >/dev/null");
   system("sudo rfkill block all");
   if (reportingEnabled) {printf("Video Playing\n");}
   sleep(3);
@@ -484,7 +484,7 @@ int main(int argc, char * argv[]) {
     if (!countGPIO) { // check the GPIO pin every 128 loops
       readGPIO();
       if (!(( *gpioStatus >> 0x00) & 1)){ //if the GPIO is low, enter sleep mode
-        //sleepMode();
+        sleepMode();
       }
     }
     countGPIO++;
