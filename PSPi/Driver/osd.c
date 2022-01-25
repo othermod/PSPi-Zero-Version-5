@@ -71,7 +71,7 @@ static RGBA8_T green = {  0,  255,  0,  255};
 static RGBA8_T red = {  255,  0,  0,  255};
 static RGBA8_T orange = {  255,  127,  0,  255};
 static RGBA8_T white = {  255,  255,  255,  255};
-static RGBA8_T black = {  0,  0,  0,  175};
+static RGBA8_T black = {  0,  0,  0,  255};
 
 // get rid of voltage and amperage, and replace with battery % (can do + for charging and - for discharging)
 // maybe add 4-bit LCD brightness and have an 8-level indicator when display button is being pressed
@@ -193,14 +193,15 @@ void clearLayer(IMAGE_LAYER_T * layer) {
 }
 
 void updateInfo(IMAGE_LAYER_T * infoLayer) {
-  char buffer[128];
-  snprintf(buffer, sizeof(buffer), "Power: %dmA, %dmW\nBattery: %d%%\nRaw Volts: %dmV\nCalc Volts: %dmV\n",-batteryData.amperage, -batteryData.amperage * batteryData.rawVoltage / 1000, batteryData.percent, batteryData.rawVoltage, batteryData.correctedVoltage);
-
   IMAGE_T * image = & (infoLayer -> image);
-  clearImageRGB(image, & clearColor);
-  int x = 1, y = 1;
-  drawStringRGB(x, y, buffer, & textColor, image);
-  changeSourceAndUpdateImageLayer(infoLayer);
+
+    char buffer[128];
+    snprintf(buffer, sizeof(buffer), "Power:\n%dmA\n%dmW\nBattery:\n%d%%\nRaw Volt:\n%dmV\nCalc Volt:\n%dmV\n",-batteryData.amperage, -batteryData.amperage * batteryData.rawVoltage / 1000, batteryData.percent, batteryData.rawVoltage, batteryData.correctedVoltage);
+    clearImageRGB(image, & clearColor);
+    int x = 0, y = 0;
+    drawStringRGB(x, y, buffer, & textColor, image);
+    changeSourceAndUpdateImageLayer(infoLayer);
+
 }
 
 int openI2C() {
@@ -230,11 +231,20 @@ void readGPIO(){
   close(fdd);
 }
 
-void sleepMode(){
-  system("sudo bash sleep.sh >/dev/null");
+void sleepMode(IMAGE_LAYER_T * infoLayer){
   system("sudo rfkill block all");
+  IMAGE_T * image = & (infoLayer -> image);
+  int i;
+    for (i = 0; i < 240; i++) {
+      imageHorizontalLineRGB(image, 0, 799, i, & black);
+      imageHorizontalLineRGB(image, 0, 799, 480-i, & black);
+      i++;
+      imageHorizontalLineRGB(image, 0, 799, i, & black);
+      imageHorizontalLineRGB(image, 0, 799, 480-i, & black);
+      changeSourceAndUpdateImageLayer(infoLayer);
+    }
   if (reportingEnabled) {printf("Video Playing\n");}
-  sleep(3);
+  sleep(0);
   char buf[1] = {ATMEGA_ENTER_SLEEP_MODE};
 	if (write(I2CFile,buf,1) != 1) {
 			/* ERROR HANDLING: i2c transaction failed */
@@ -252,6 +262,7 @@ void sleepMode(){
 			/* ERROR HANDLING: i2c transaction failed */
 			if (reportingEnabled) {printf("Failed to write to the i2c bus.\n");}
 		}
+    clearImageRGB(image, & clearColor);
     firstLoop = 1; // reset the battery voltage because the voltage probably changed while system was in sleep mode
 }
 
@@ -483,12 +494,15 @@ int main(int argc, char * argv[]) {
       batteryData.percent = 0;
     }
 
-    if (!countGPIO) { // check the GPIO pin every 128 loops
+    if (!countGPIO) { // check the GPIO pin every 64 loops
       readGPIO();
       if (!(( *gpioStatus >> 0x00) & 1)){ //if the GPIO is low, enter sleep mode
-        sleepMode();
+        sleepMode( & infoLayer);
+        clearLayer( & infoLayer);
       }
     }
+    countGPIO++;
+    countGPIO++;
     countGPIO++;
     countGPIO++;
 
