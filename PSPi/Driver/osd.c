@@ -277,14 +277,14 @@ int main(int argc, char * argv[]) {
         }
         if (!strcmp("-mouse", argv[ctr])) {
           mouseEnabled = 1;
-         }
+        }
         if (!strcmp("-report", argv[ctr])) {
            reportingEnabled = 1;
-          }
+        }
      }
-  if (reportingEnabled) {printf("Mouse: %d\n", mouseEnabled);}
-  if (reportingEnabled) {printf("Gamepad: %d\n", gamepadEnabled);}
-  if (reportingEnabled) {printf("Reporting: %d\n", reportingEnabled);}
+  if (reportingEnabled) {printf("Mouse Enabled\n");}
+  if (reportingEnabled) {printf("Gamepad Enabled\n");}
+  if (reportingEnabled) {printf("Reporting Enabled\n");}
 
   uint32_t displayNumber = 0;
 
@@ -406,7 +406,6 @@ int main(int argc, char * argv[]) {
 
   int countOSD = 0;
   uint8_t countGPIO = 0;
-
   while (1) {
     if (read(I2CFile, & currentReading, sizeof(I2C_Struct)) != sizeof(I2C_Struct)) { // read the atmega
       printf("Controller is not detected on the I2C bus.\n");
