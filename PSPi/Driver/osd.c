@@ -18,6 +18,8 @@
 #include "bcm_host.h"
 
 #define SENSE_RESISTOR 50
+#define BATTERY_INTERNAL_RESISTANCE 270
+
 #define I2C_ADDRESS 0x18
 
 // bit positions for each button
@@ -60,18 +62,14 @@ int I2CFile; // defining this here so it can be used without passing it to funct
 
 volatile bool run = true;
 
-static RGBA8_T clearColor = {
-  0, // red
-  0, // green
-  0, // blue
-  0  // opacity
-};
-static RGBA8_T textColor = {  255,  255,  255,  255};
-static RGBA8_T green = {  0,  255,  0,  255};
-static RGBA8_T red = {  255,  0,  0,  255};
-static RGBA8_T orange = {  255,  127,  0,  255};
-static RGBA8_T white = {  255,  255,  255,  255};
-static RGBA8_T black = {  0,  0,  0,  255};
+// create colors ( format is: red, green, blue, opacity)
+static RGBA8_T clearColor = { 0,    0,    0,    0};
+static RGBA8_T textColor =  { 255,  255,  255,  255};
+static RGBA8_T green =      { 0,    255,  0,    255};
+static RGBA8_T red =        { 255,  0,    0,    255};
+static RGBA8_T orange =     { 255,  127,  0,    255};
+static RGBA8_T white =      { 255,  255,  255,  255};
+static RGBA8_T black =      { 0,    0,    0,    255};
 
 // get rid of voltage and amperage, and replace with battery % (can do + for charging and - for discharging)
 // maybe add 4-bit LCD brightness and have an 8-level indicator when display button is being pressed
@@ -201,7 +199,6 @@ void updateInfo(IMAGE_LAYER_T * infoLayer) {
     int x = 0, y = 0;
     drawStringRGB(x, y, buffer, & textColor, image);
     changeSourceAndUpdateImageLayer(infoLayer);
-
 }
 
 int openI2C() {
@@ -245,7 +242,8 @@ void sleepMode(IMAGE_LAYER_T * infoLayer){
     }
   if (reportingEnabled) {printf("Video Playing\n");}
   sleep(0);
-  char buf[1] = {ATMEGA_ENTER_SLEEP_MODE};
+  char buf[1];
+  buf[0] = ATMEGA_ENTER_SLEEP_MODE;
 	if (write(I2CFile,buf,1) != 1) {
 			/* ERROR HANDLING: i2c transaction failed */
 			printf("Failed to write to the i2c bus.\n");
@@ -474,7 +472,7 @@ int main(int argc, char * argv[]) {
       batteryData.isCharging = 0;
     }
 
-    int temp = batteryData.rawVoltage + batteryData.amperage / 2.5; // put more work into this, to better calculate internal resistance of the battery
+    int temp = batteryData.rawVoltage + batteryData.amperage * BATTERY_INTERNAL_RESISTANCE / 1000;
     if (firstLoop) { //set the initial (specifically correctedVoltage) battery condition
       batteryData.correctedVoltage = temp;
       firstLoop = 0;
