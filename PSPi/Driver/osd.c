@@ -232,7 +232,10 @@ void sleepMode(IMAGE_LAYER_T * infoLayer){
   system("sudo rfkill block all");
   IMAGE_T * image = & (infoLayer -> image);
   int i;
-    for (i = 0; i < 240; i++) {
+    for (i = 0; i < 244; i++) {
+      imageHorizontalLineRGB(image, 0, 799, i, & black);
+      imageHorizontalLineRGB(image, 0, 799, 480-i, & black);
+      i++;
       imageHorizontalLineRGB(image, 0, 799, i, & black);
       imageHorizontalLineRGB(image, 0, 799, 480-i, & black);
       i++;
