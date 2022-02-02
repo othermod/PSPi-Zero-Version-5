@@ -64,7 +64,6 @@ volatile bool run = true;
 
 // create colors ( format is: red, green, blue, opacity)
 static RGBA8_T clearColor = { 0,    0,    0,    0};
-static RGBA8_T textColor =  { 255,  255,  255,  255};
 static RGBA8_T green =      { 0,    255,  0,    255};
 static RGBA8_T red =        { 255,  0,    0,    255};
 static RGBA8_T orange =     { 255,  127,  0,    255};
@@ -197,7 +196,7 @@ void updateInfo(IMAGE_LAYER_T * infoLayer) {
     snprintf(buffer, sizeof(buffer), "Power:\n%dmA\n%dmW\nBattery:\n%d%%\nRaw Volt:\n%dmV\nCalc Volt:\n%dmV\n",-batteryData.amperage, -batteryData.amperage * batteryData.rawVoltage / 1000, batteryData.percent, batteryData.rawVoltage, batteryData.correctedVoltage);
     clearImageRGB(image, & clearColor);
     int x = 0, y = 0;
-    drawStringRGB(x, y, buffer, & textColor, image);
+    drawStringRGB(x, y, buffer, & white, image);
     changeSourceAndUpdateImageLayer(infoLayer);
 }
 
