@@ -85,16 +85,19 @@ do_i2c() {
 
 do_i2c
 
-# create services
+# remove services (including ones from previous versions) and recreate the single service
 systemctl stop disablehdmi 2>/dev/null
 systemctl stop pspi_controller 2>/dev/null
+systemctl stop PSPi 2>/dev/null
 systemctl disable disablehdmi 2>/dev/null
 systemctl disable pspi_controller 2>/dev/null
-cp -f /boot/PSPi/Configs/pspi_controller.service /etc/systemd/system/pspi_controller.service
-systemctl enable pspi_controller 2>/dev/null
+systemctl disable PSPi 2>/dev/null
+cp -f /boot/PSPi/Configs/PSPi.service /etc/systemd/system/PSPi.service
+systemctl enable PSPi 2>/dev/null
 
 # fix file permissions
-chmod 0755 /home/pi/PSPi/Driver/osd
+chmod +x /home/pi/PSPi/Driver/osd
+cp -f /boot/PSPi/boot.sh /home/pi/PSPi/boot.sh
 
 echo "Rebooting"
 sleep 1

@@ -3,8 +3,8 @@ Description=Controller Service for PSPi
 
 [Service]
 Type=oneshot
-ExecStart=bash /boot/PSPi/boot.sh
-ExecStop=bash /boot/PSPi/shutdown.sh
+ExecStart=bash /home/pi/PSPi/boot.sh
+ExecStop=bash /home/pi/PSPi/shutdown.sh
 RemainAfterExit=yes
 
 [Install]
