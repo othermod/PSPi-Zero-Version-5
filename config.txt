@@ -10,6 +10,11 @@ dtparam=audio=on
 disable_audio_dither=1
 audio_pwm_mode=2
 
+# HDMI
+hdmi_drive=1
+hdmi_ignore_edid_audio=1
+hdmi_blanking=2
+
 [all]
 #dtoverlay=vc4-fkms-v3d
 gpu_mem_256=128
