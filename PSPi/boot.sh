@@ -12,4 +12,4 @@ echo 1   > /sys/class/gpio/gpio29/value
 cd /home/pi/PSPi/Driver
 
 # start driver
-sudo ./osd -gamepad &
+sudo ./osd -gamepad -joystick &
